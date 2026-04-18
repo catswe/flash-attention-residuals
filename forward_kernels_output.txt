@@ -22,323 +22,373 @@ softmax.
 
   warnings.warn(
 
-mean abs (paper): 0.291015625
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (1, 512, 8, 1, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 10.19s,
-best config selected: num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None;
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_2_online_softmax_merge_intrablock_kernel,
-with key as (512, 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32', 'torch.bfloat16'),
-finished after 5.26s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (2, 512, 8, 2, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 13.00s,
-best config selected: num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (3, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 16.39s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (4, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 16.68s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (5, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 24.43s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (6, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 23.89s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (7, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 24.32s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (8, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 24.88s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (9, 512, 1, 16, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.float32'),
-finished after 10.53s,
-best config selected: num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None;
-production_forward: 12.345798900000204 ms
-mean abs difference: 0.035400390625
-mean relative difference: 0.341796875
-paper_forward: 62.31648819999975 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.291015625
+paper_forward: 62.45502670003589 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference: 0.0
+mean relative difference: 0.0
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (1, 512, 8, 1, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.49s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_2_online_softmax_merge_intrablock with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_2_online_softmax_merge_intrablock,
+with key as (512, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32', 'torch.bfloat16'),
+finished after 2.36s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (2, 512, 8, 2, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.51s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (3, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.55s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (4, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.56s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (5, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.64s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (6, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.93s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (7, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.64s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (8, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.65s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention,
+with key as (9, 512, 1, 16, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.float32'),
+finished after 2.50s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None;
+production_forward: 10.529775599979985 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.056884765625
+mean relative difference: 0.0201416015625
+mean relative difference: 0.6328125
+
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.29296875
+paper_forward: 62.4647600499884 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference: 0.0
+mean relative difference: 0.0
+production_forward: 10.530494449994876 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.058349609375
+mean relative difference: 0.0201416015625
+mean relative difference: 0.65234375
+
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.291015625
+paper_forward: 62.458330350000324 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference: 0.0
+mean relative difference: 0.0
+production_forward: 10.528116699970269 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.054931640625
+mean relative difference: 0.02001953125
+mean relative difference: 0.61328125
+
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.291015625
+production_forward: 10.528306800006249 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.058349609375
+mean relative difference: 0.02001953125
+mean relative difference: 0.65625
+paper_forward: 62.44096865002575 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference: 0.0
 mean relative difference: 0.0
 
-mean abs (paper): 0.2890625
-paper_forward: 62.287638400002265 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.2890625
+production_forward: 10.529368400011663 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.058349609375
+mean relative difference: 0.02001953125
+mean relative difference: 0.6484375
+paper_forward: 62.45822185001089 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
 mean relative difference: 0.0
-production_forward: 12.349747600001137 ms
-mean abs difference: 0.033447265625
-mean relative difference: 0.32421875
-
-mean abs (paper): 0.2890625
-paper_forward: 62.30615794999892 ms
-mean abs difference: 0.0
-mean relative difference: 0.0
-production_forward: 12.348371999999586 ms
-mean abs difference: 0.035888671875
-mean relative difference: 0.34375
-
-mean abs (paper): 0.2890625
-production_forward: 12.351753349997807 ms
-mean abs difference: 0.033935546875
-mean relative difference: 0.330078125
-paper_forward: 62.31858700000146 ms
-mean abs difference: 0.0
 mean relative difference: 0.0
 
-mean abs (paper): 0.291015625
-paper_forward: 62.313898950000635 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.2890625
+production_forward: 10.52706075001879 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.05810546875
+mean relative difference: 0.0201416015625
+mean relative difference: 0.66015625
+paper_forward: 62.45418005000829 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
 mean relative difference: 0.0
-production_forward: 12.350160100001517 ms
-mean abs difference: 0.03515625
-mean relative difference: 0.333984375
-
-mean abs (paper): 0.291015625
-production_forward: 12.347099400000161 ms
-mean abs difference: 0.03466796875
-mean relative difference: 0.326171875
-paper_forward: 62.31845020000151 ms
-mean abs difference: 0.0
 mean relative difference: 0.0
 
-mean abs (paper): 0.296875
-paper_forward: 62.29927144999863 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.287109375
+paper_forward: 62.459212849989854 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
 mean relative difference: 0.0
-production_forward: 12.347136399998249 ms
-mean abs difference: 0.03564453125
-mean relative difference: 0.341796875
+mean relative difference: 0.0
+production_forward: 10.528561599994646 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.0576171875
+mean relative difference: 0.0201416015625
+mean relative difference: 0.64453125
 
-mean abs (paper): 0.291015625
-production_forward: 12.344988699999249 ms
-mean abs difference: 0.03466796875
-mean relative difference: 0.3359375
-paper_forward: 62.30524535000086 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.291015625
+production_forward: 10.526993199982826 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.057861328125
+mean relative difference: 0.0201416015625
+mean relative difference: 0.64453125
+paper_forward: 62.46236165002301 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference: 0.0
 mean relative difference: 0.0
 
-mean abs (paper): 0.291015625
-production_forward: 12.347360149999531 ms
-mean abs difference: 0.0341796875
-mean relative difference: 0.33203125
-paper_forward: 62.289526949999185 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.2890625
+paper_forward: 62.45155650003653 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
 mean relative difference: 0.0
+mean relative difference: 0.0
+production_forward: 10.527654299994538 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.058349609375
+mean relative difference: 0.0201416015625
+mean relative difference: 0.66015625
 
-mean abs (paper): 0.291015625
-production_forward: 12.347895900001049 ms
-mean abs difference: 0.033203125
-mean relative difference: 0.318359375
-paper_forward: 62.32475504999968 ms
-mean abs difference: 0.0
+mean abs randn paper: 0.11572265625
+mean abs zeros paper: 0.2890625
+paper_forward: 62.484252149988606 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
 mean relative difference: 0.0
+mean relative difference: 0.0
+production_forward: 10.533189550005773 ms
+mean abs difference zeros: 0.00072479248046875
+mean abs difference randn: 0.056640625
+mean relative difference: 0.02001953125
+mean relative difference: 0.63671875
 
