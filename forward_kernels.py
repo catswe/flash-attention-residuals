@@ -87,7 +87,7 @@ autotune_configs = [
     key=["NUM_SOURCE_BLOCKS", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK", "PADDED_SRC"],
 )
 @triton.jit
-def phase_1_batched_interblock_attention(
+def phase_1_batched_interblock_attention_kernel(
     block_representations_ptr,
     pseudo_queries_ptr,
     first_layer_normalized_output_ptr,
@@ -165,12 +165,44 @@ def phase_1_batched_interblock_attention(
             )
 
 
+def phase_1_batched_interblock_attention(
+    block_representations,
+    pseudo_queries,
+    first_layer_output,
+    interblock_normalized_outputs=None,
+    interblock_lses=None,
+    eps=None,
+):
+    NUM_QUERIES = pseudo_queries.shape[0]
+    NUM_SOURCE_BLOCKS = block_representations.shape[0]
+
+    if NUM_QUERIES > 1:
+        assert interblock_normalized_outputs is not None and interblock_lses is not None
+
+    if eps is None:
+        eps = torch.finfo(torch.float32).eps
+
+    phase_1_batched_interblock_attention_kernel[(B * T,)](
+        block_representations,
+        pseudo_queries,
+        first_layer_output,
+        interblock_normalized_outputs,
+        interblock_lses,
+        eps,
+        NUM_SOURCE_BLOCKS,
+        B * T,
+        D,
+        NUM_QUERIES,
+        triton.next_power_of_2(NUM_SOURCE_BLOCKS),
+    )
+
+
 @triton.autotune(
     configs=autotune_configs,
     key=["HIDDEN_DIM"],
 )
 @triton.jit
-def phase_2_online_softmax_merge_intrablock(
+def phase_2_online_softmax_merge_intrablock_kernel(
     intrablock_partial_sum_ptr,
     pseudo_query_ptr,
     interblock_unnormalized_output_ptr,
@@ -245,23 +277,17 @@ def production_forward(inputs, pseudo_queries, layers):
             curr_block_idx += 1
             num_queries = min(BLOCK_SIZE, len(layers) - i)
 
-            phase_1_batched_interblock_attention[(B * T,)](
-                block_representations,
+            phase_1_batched_interblock_attention(
+                block_representations[:curr_block_idx],
                 pseudo_queries[i : i + num_queries],
                 residual_attention_output,
                 interblock_normalized_outputs,
                 interblock_lses,
-                torch.finfo(torch.float32).eps,
-                curr_block_idx,
-                B * T,
-                D,
-                num_queries,
-                triton.next_power_of_2(curr_block_idx),
             )
         else:
             offset = (i % BLOCK_SIZE) - 1
 
-            phase_2_online_softmax_merge_intrablock[(B * T,)](
+            phase_2_online_softmax_merge_intrablock_kernel[(B * T,)](
                 block_representations[curr_block_idx],
                 pseudo_queries[i],
                 interblock_normalized_outputs[offset],
@@ -273,18 +299,10 @@ def production_forward(inputs, pseudo_queries, layers):
 
         block_representations[curr_block_idx] += layers[i](residual_attention_output)
 
-    phase_1_batched_interblock_attention[(B * T,)](
+    phase_1_batched_interblock_attention(
         block_representations,
         pseudo_queries[-1:],
         residual_attention_output,
-        interblock_normalized_outputs,
-        interblock_lses,
-        torch.finfo(torch.float32).eps,
-        curr_block_idx + 1,
-        B * T,
-        D,
-        1,
-        triton.next_power_of_2(curr_block_idx + 1),
     )
     return residual_attention_output
 
@@ -354,9 +372,9 @@ for i in range(10):
             print(f"mean abs difference zeros: {abs_difference_zeros.mean()}")
             print(f"mean abs difference randn: {abs_difference_randn.mean()}")
             print(
-                f"mean relative difference: {(abs_difference_zeros / (out_paper_zeros.abs() + 1e-3)).mean()}"
+                f"mean relative difference zeros: {(abs_difference_zeros / (out_paper_zeros.abs() + 1e-3)).mean()}"
             )
             print(
-                f"mean relative difference: {(abs_difference_randn / (out_paper_randn.abs() + 1e-3)).mean()}"
+                f"mean relative difference randn: {(abs_difference_randn / (out_paper_randn.abs() + 1e-3)).mean()}"
             )
         print()
