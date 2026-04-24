@@ -141,6 +141,7 @@ def phase_2_online_softmax_merge_intrablock_kernel(
     interblock_normalized_output_ptr,
     interblock_lse_ptr,
     merged_output_ptr,
+    merged_lse_ptr,
     eps,
     HIDDEN_DIM: tl.constexpr,
 ):
@@ -156,9 +157,7 @@ def phase_2_online_softmax_merge_intrablock_kernel(
 
     interblock_lse = tl.load(interblock_lse_ptr + batch_seq_idx)
     interblock_normalized_output = tl.load(
-        interblock_normalized_output_ptr
-        + batch_seq_idx * HIDDEN_DIM
-        + hidden_dim_range
+        interblock_normalized_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
     ).to(tl.float32)
 
     squared_norm_sum = tl.sum(intrablock_partial_sum * intrablock_partial_sum)
@@ -170,14 +169,19 @@ def phase_2_online_softmax_merge_intrablock_kernel(
     merged_max = tl.maximum(interblock_lse, intrablock_logit)
     interblock_weight = tl.exp(interblock_lse - merged_max)
     intrablock_weight = tl.exp(intrablock_logit - merged_max)
+    exp_sum = interblock_weight + intrablock_weight
     merged_output = (
         interblock_weight * interblock_normalized_output
         + intrablock_weight * intrablock_partial_sum
-    ) / (interblock_weight + intrablock_weight)
+    ) / exp_sum
 
     tl.store(
         merged_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
         merged_output.to(tl.bfloat16),
+    )
+    tl.store(
+        merged_lse_ptr + batch_seq_idx,
+        merged_max + tl.log(exp_sum),
     )
 
 
@@ -187,6 +191,7 @@ def phase_2_online_softmax_merge_intrablock(
     interblock_normalized_output,
     interblock_lse,
     merged_output,
+    merged_lse,
     eps=None,
 ):
     if eps is None:
@@ -198,6 +203,7 @@ def phase_2_online_softmax_merge_intrablock(
         interblock_normalized_output,
         interblock_lse,
         merged_output,
+        merged_lse,
         eps,
         D,
     )
@@ -242,11 +248,10 @@ def production_forward(inputs, pseudo_queries, layers):
                 softmax_outputs[offset],
                 lses[offset],
                 softmax_outputs[0],
+                lses[0],
             )
 
-        block_representations[curr_block_idx] += layers[i](
-            softmax_outputs[0]
-        )
+        block_representations[curr_block_idx] += layers[i](softmax_outputs[0])
 
     phase_1_batched_interblock_attention(
         block_representations,
