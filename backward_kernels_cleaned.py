@@ -140,8 +140,6 @@ def phase_2_online_softmax_merge_intrablock_kernel(
     pseudo_query_ptr,
     interblock_normalized_output_ptr,
     interblock_lse_ptr,
-    merged_output_ptr,
-    merged_lse_ptr,
     eps,
     HIDDEN_DIM: tl.constexpr,
 ):
@@ -176,11 +174,13 @@ def phase_2_online_softmax_merge_intrablock_kernel(
     ) / exp_sum
 
     tl.store(
-        merged_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
+        interblock_normalized_output_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range,
         merged_output.to(tl.bfloat16),
     )
     tl.store(
-        merged_lse_ptr + batch_seq_idx,
+        interblock_lse_ptr + batch_seq_idx,
         merged_max + tl.log(exp_sum),
     )
 
@@ -190,8 +190,6 @@ def phase_2_online_softmax_merge_intrablock(
     pseudo_query,
     interblock_normalized_output,
     interblock_lse,
-    merged_output,
-    merged_lse,
     eps=None,
 ):
     if eps is None:
@@ -202,8 +200,6 @@ def phase_2_online_softmax_merge_intrablock(
         pseudo_query,
         interblock_normalized_output,
         interblock_lse,
-        merged_output,
-        merged_lse,
         eps,
         D,
     )
@@ -219,47 +215,47 @@ def production_forward(inputs, pseudo_queries, layers):
         dtype=inputs.dtype,
     )
     block_representations[0] = inputs
-    curr_block_idx = 0
 
-    softmax_outputs = torch.empty(
-        (BLOCK_SIZE, B, T, D),
+    attn_out = torch.empty(
+        (len(layers) + 1, B, T, D),
         dtype=torch.bfloat16,
         device=DEVICE,
     )
-    lses = torch.empty((BLOCK_SIZE, B, T), dtype=torch.float32, device=DEVICE)
+    attn_lse = torch.empty(
+        (len(layers) + 1, B, T),
+        dtype=torch.float32,
+        device=DEVICE,
+    )
 
     for i in range(len(layers)):
+        curr_block_idx = i // BLOCK_SIZE + 1
+
         if i % BLOCK_SIZE == 0:
-            curr_block_idx += 1
             num_queries = min(BLOCK_SIZE, len(layers) - i)
 
             phase_1_batched_interblock_attention(
                 block_representations[:curr_block_idx],
                 pseudo_queries[i : i + num_queries],
-                softmax_outputs,
-                lses,
+                attn_out[i : i + num_queries],
+                attn_lse[i : i + num_queries],
             )
         else:
-            offset = i % BLOCK_SIZE
-
             phase_2_online_softmax_merge_intrablock(
                 block_representations[curr_block_idx],
                 pseudo_queries[i],
-                softmax_outputs[offset],
-                lses[offset],
-                softmax_outputs[0],
-                lses[0],
+                attn_out[i],
+                attn_lse[i],
             )
 
-        block_representations[curr_block_idx] += layers[i](softmax_outputs[0])
+        block_representations[curr_block_idx] += layers[i](attn_out[i])
 
     phase_1_batched_interblock_attention(
         block_representations,
         pseudo_queries[-1:],
-        softmax_outputs,
-        lses,
+        attn_out[-1:],
+        attn_lse[-1:],
     )
-    return softmax_outputs[0]
+    return attn_out[-1]
 
 
 inputs = torch.randn(B, T, D, device=DEVICE, dtype=DTYPE)
