@@ -13,7 +13,7 @@ os.environ["TRITON_PRINT_AUTOTUNING"] = "1"
 
 DEVICE = "cuda"
 DTYPE = torch.bfloat16
-FORWARD_ONLY = True
+FORWARD_ONLY = False
 
 BLOCK_SIZE = 8
 NUM_LAYERS = 64
@@ -420,7 +420,7 @@ torch._inductor.codecache.FxGraphCache.clear()
 torch._inductor.config.force_disable_caches = True
 
 for i in range(10):
-    with torch.no_grad():
+    with torch.set_grad_enabled(not FORWARD_ONLY):
         inputs = torch.randn(B, T, D, device=DEVICE, dtype=DTYPE)
         layers_swiglu = [SwiGLU(D) for _ in range(NUM_LAYERS)]
         layers_identity = [Identity() for _ in range(NUM_LAYERS)]
