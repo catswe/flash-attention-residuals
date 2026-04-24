@@ -202,6 +202,28 @@ def phase_2_online_softmax_merge_intrablock_kernel(
     )
 
 
+def phase_2_online_softmax_merge_intrablock(
+    intrablock_partial_sum,
+    pseudo_query,
+    interblock_normalized_output,
+    interblock_lse,
+    merged_output,
+    eps=None,
+):
+    if eps is None:
+        eps = torch.finfo(torch.float32).eps
+
+    phase_2_online_softmax_merge_intrablock_kernel[(B * T,)](
+        intrablock_partial_sum,
+        pseudo_query,
+        interblock_normalized_output,
+        interblock_lse,
+        merged_output,
+        eps,
+        D,
+    )
+
+
 def production_forward(inputs, pseudo_queries, layers):
     block_representations = torch.zeros(
         math.ceil(len(layers) / BLOCK_SIZE) + 1,
@@ -241,14 +263,12 @@ def production_forward(inputs, pseudo_queries, layers):
         else:
             offset = (i % BLOCK_SIZE) - 1
 
-            phase_2_online_softmax_merge_intrablock_kernel[(B * T,)](
+            phase_2_online_softmax_merge_intrablock(
                 block_representations[curr_block_idx],
                 pseudo_queries[i],
                 interblock_normalized_outputs[offset],
                 interblock_lses[offset],
                 residual_attention_output,
-                torch.finfo(torch.float32).eps,
-                D,
             )
 
         block_representations[curr_block_idx] += layers[i](residual_attention_output)
