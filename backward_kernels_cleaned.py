@@ -288,6 +288,142 @@ layers_swiglu = [SwiGLU() for _ in range(L)]
 out = production_forward(inputs, pseudo_queries, layers_swiglu)
 
 
+@triton.autotune(
+    configs=autotune_configs,
+    key=["HIDDEN_DIM"],
+)
+@triton.jit
+def phase_2_online_softmax_merge_intrablock_backward_kernel(
+    intrablock_partial_sum_ptr,
+    pseudo_query_ptr,
+    prev_interblock_normalized_output_ptr,
+    prev_interblock_lse_ptr,
+    grad_merged_output_ptr,
+    grad_merged_lse_ptr,
+    grad_intrablock_partial_sum_ptr,
+    grad_pseudo_query_ptr,
+    grad_prev_interblock_normalized_output_ptr,
+    grad_prev_interblock_lse_ptr,
+    eps,
+    HIDDEN_DIM: tl.constexpr,
+):
+    batch_seq_idx = tl.program_id(0)
+    hidden_dim_range = tl.arange(0, HIDDEN_DIM)
+
+    x = tl.load(
+        intrablock_partial_sum_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+
+    q = tl.load(
+        pseudo_query_ptr + hidden_dim_range,
+        eviction_policy="evict_last",
+    ).to(tl.float32)
+
+    y0 = tl.load(
+        prev_interblock_normalized_output_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range
+    ).to(tl.float32)
+
+    l0 = tl.load(prev_interblock_lse_ptr + batch_seq_idx).to(tl.float32)
+
+    grad_y = tl.load(
+        grad_merged_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+
+    grad_l = tl.load(grad_merged_lse_ptr + batch_seq_idx).to(tl.float32)
+
+    squared_norm_sum = tl.sum(x * x)
+    inverse_rms_norm = tl.rsqrt(squared_norm_sum / float(HIDDEN_DIM) + eps)
+
+    dot_xq = tl.sum(x * q)
+    l1 = dot_xq * inverse_rms_norm
+
+    merged_max = tl.maximum(l0, l1)
+    w0 = tl.exp(l0 - merged_max)
+    w1 = tl.exp(l1 - merged_max)
+    exp_sum = w0 + w1
+
+    alpha = w0 / exp_sum
+    beta = w1 / exp_sum
+
+    grad_y0 = alpha * grad_y
+    grad_x_from_value = beta * grad_y
+
+    dot_grad_y_y0_minus_x = tl.sum(grad_y * (y0 - x))
+
+    grad_l0 = alpha * grad_l + alpha * beta * dot_grad_y_y0_minus_x
+    grad_l1 = beta * grad_l - alpha * beta * dot_grad_y_y0_minus_x
+
+    inv_rms_cubed = inverse_rms_norm * inverse_rms_norm * inverse_rms_norm
+
+    grad_x_from_logit = grad_l1 * (
+        inverse_rms_norm * q - dot_xq * inv_rms_cubed * x / float(HIDDEN_DIM)
+    )
+
+    grad_q = grad_l1 * inverse_rms_norm * x
+    grad_x = grad_x_from_value + grad_x_from_logit
+
+    tl.atomic_add(
+        grad_intrablock_partial_sum_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
+        grad_x,
+        sem="relaxed",
+    )
+
+    tl.atomic_add(
+        grad_pseudo_query_ptr + hidden_dim_range,
+        grad_q,
+        sem="relaxed",
+    )
+
+    tl.store(
+        grad_prev_interblock_normalized_output_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range,
+        grad_y0,
+    )
+
+    tl.store(
+        grad_prev_interblock_lse_ptr + batch_seq_idx,
+        grad_l0,
+    )
+
+
+def phase_2_online_softmax_merge_intrablock_backward(
+    intrablock_partial_sum,
+    pseudo_query,
+    prev_interblock_normalized_output,
+    prev_interblock_lse,
+    grad_merged_output,
+    grad_merged_lse,
+    grad_intrablock_partial_sum,
+    grad_pseudo_query,
+    grad_prev_interblock_normalized_output,
+    grad_prev_interblock_lse,
+    eps=None,
+):
+    if eps is None:
+        eps = torch.finfo(torch.float32).eps
+
+    if grad_merged_lse is None:
+        grad_merged_lse = torch.zeros_like(prev_interblock_lse)
+
+    phase_2_online_softmax_merge_intrablock_backward_kernel[(B * T,)](
+        intrablock_partial_sum,
+        pseudo_query,
+        prev_interblock_normalized_output,
+        prev_interblock_lse,
+        grad_merged_output,
+        grad_merged_lse,
+        grad_intrablock_partial_sum,
+        grad_pseudo_query,
+        grad_prev_interblock_normalized_output,
+        grad_prev_interblock_lse,
+        eps,
+        D,
+    )
+
+
 class BlockwiseAttentionFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inputs, pseudo_queries, layers, eps, *flat_layer_params):
