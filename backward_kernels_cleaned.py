@@ -17,14 +17,6 @@ B, T, D = 32, 1024, 512
 BT = B * T
 
 
-class Identity(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x
-
-
 autotune_configs = [
     triton.Config({}, num_warps=num_warps, num_stages=num_stages)
     for num_warps in [1, 2, 4, 8, 16]
@@ -138,7 +130,6 @@ def phase_1_batched_interblock_attention(
     key=["HIDDEN_DIM"],
     restore_value=[
         "interblock_normalized_output_ptr",
-        "interblock_lse_ptr",
     ],
 )
 @triton.jit
@@ -185,10 +176,6 @@ def phase_2_online_softmax_merge_intrablock_kernel(
         + batch_seq_idx * HIDDEN_DIM
         + hidden_dim_range,
         merged_output.to(tl.bfloat16),
-    )
-    tl.store(
-        interblock_lse_ptr + batch_seq_idx,
-        merged_max + tl.log(exp_sum),
     )
 
 
@@ -386,7 +373,7 @@ def phase_1_batched_interblock_attention_backward_kernel(
         )
 
 
-phase_1_reduce_configs = [
+reduce_configs = [
     triton.Config(
         {
             "BLOCK_BATCH_SEQ": block_batch_seq,
@@ -402,7 +389,7 @@ phase_1_reduce_configs = [
 
 
 @triton.autotune(
-    configs=phase_1_reduce_configs,
+    configs=reduce_configs,
     key=["NUM_BATCH_SEQ", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK"],
     restore_value=[
         "grad_pseudo_queries_accumulator_ptr",
@@ -509,8 +496,6 @@ def phase_1_batched_interblock_attention_backward(
     key=["HIDDEN_DIM"],
     restore_value=[
         "grad_intrablock_partial_sum_accumulator_ptr",
-        "grad_phase1_interblock_normalized_output_ptr",
-        "grad_phase1_interblock_logsumexp_ptr",
     ],
 )
 @triton.jit
@@ -620,12 +605,15 @@ def phase_2_online_softmax_merge_intrablock_backward_kernel(
         + grad_intrablock_partial_sum_from_logit_path
     )
 
-    tl.atomic_add(
+    grad_intrablock_ptr = (
         grad_intrablock_partial_sum_accumulator_ptr
         + batch_seq_idx * HIDDEN_DIM
-        + hidden_dim_range,
-        grad_intrablock_partial_sum,
-        sem="relaxed",
+        + hidden_dim_range
+    )
+
+    tl.store(
+        grad_intrablock_ptr,
+        tl.load(grad_intrablock_ptr).to(tl.float32) + grad_intrablock_partial_sum,
     )
 
     tl.store(
@@ -646,23 +634,8 @@ def phase_2_online_softmax_merge_intrablock_backward_kernel(
     )
 
 
-phase_2_reduce_configs = [
-    triton.Config(
-        {
-            "BLOCK_BATCH_SEQ": block_batch_seq,
-            "BLOCK_HIDDEN": block_hidden,
-        },
-        num_warps=num_warps,
-        num_stages=1,
-    )
-    for block_batch_seq in [64, 128, 256]
-    for block_hidden in [16, 32]
-    for num_warps in [4, 8]
-]
-
-
 @triton.autotune(
-    configs=phase_2_reduce_configs,
+    configs=reduce_configs,
     key=["NUM_BATCH_SEQ", "HIDDEN_DIM"],
     restore_value=[
         "grad_pseudo_query_accumulator_ptr",
