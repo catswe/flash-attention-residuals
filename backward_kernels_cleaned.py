@@ -1,4 +1,6 @@
 import math
+import random
+import time
 
 import torch
 import torch.nn as nn
@@ -1149,6 +1151,115 @@ def production_forward(inputs, pseudo_queries, layers, eps=None):
     )
 
 
+@torch.compile(mode="max-autotune-no-cudagraphs")
+def naive_attention_residual(pseudo_queries, values):
+    keys = F.rms_norm(values, (values.shape[-1],))
+
+    logits = torch.einsum("d, n b t d -> n b t", pseudo_queries, keys)
+    logits = logits - logits.max(dim=0, keepdim=True).values
+
+    return torch.einsum("n b t, n b t d -> b t d", logits.softmax(0), values).to(DTYPE)
+
+
+def paper_forward(inputs, pseudo_queries, layers):
+    block_representations = torch.zeros(
+        math.ceil(len(layers) / BLOCK_SIZE) + 1,
+        *inputs.shape,
+        device=inputs.device,
+        dtype=inputs.dtype,
+    )
+    curr_block_idx = 0
+
+    block_representations[curr_block_idx] = inputs
+    for i in range(len(layers)):
+        outputs = naive_attention_residual(
+            pseudo_queries[i].to(torch.float32),
+            block_representations[: curr_block_idx + 1].to(torch.float32),
+        )
+
+        if i % BLOCK_SIZE == 0:
+            curr_block_idx += 1
+
+        block_representations[curr_block_idx] += layers[i](outputs)
+
+    return naive_attention_residual(pseudo_queries[-1], block_representations)
+
+
+@torch.compile(mode="max-autotune-no-cudagraphs")
+def phase_1_fn(query, value):
+    S, D = query.shape
+    N, B, T, _ = value.shape
+
+    logits = (F.rms_norm(value, (D,)).reshape(-1, D) @ query.T).view(N, B, T, S)
+
+    max_logits = logits.amax(dim=0)
+    exp_weights = torch.exp(logits - max_logits.unsqueeze(0))
+    o_weighted_sum = (exp_weights.unsqueeze(-1) * value.unsqueeze(3)).sum(dim=0)
+
+    max_logits = max_logits.permute(2, 0, 1)
+    o_weighted_sum = o_weighted_sum.permute(2, 0, 1, 3)
+    l_exp_sum = exp_weights.sum(dim=0).permute(2, 0, 1)
+    h = o_weighted_sum[0] / l_exp_sum[0][..., None]
+    return max_logits, o_weighted_sum, l_exp_sum, h
+
+
+@torch.compile(mode="max-autotune-no-cudagraphs")
+def phase_2_fn(
+    current_block_values,
+    query_vector,
+    prev_max_logits,
+    prev_exp_sum,
+    prev_weighted_value_sum,
+):
+    current_logits = (
+        F.rms_norm(current_block_values, (current_block_values.shape[-1],))
+        @ query_vector
+    )
+
+    updated_max_logits = torch.maximum(prev_max_logits, current_logits)
+    current_rescale = torch.exp(current_logits - updated_max_logits)
+    previous_rescale = torch.exp(prev_max_logits - updated_max_logits)
+
+    return (
+        previous_rescale[..., None] * prev_weighted_value_sum
+        + current_rescale[..., None] * current_block_values
+    ) / (previous_rescale * prev_exp_sum + current_rescale)[..., None]
+
+
+def torch_compile_forward(inputs, query_w, layers):
+    blocks = torch.zeros(
+        math.ceil(len(layers) / BLOCK_SIZE) + 1,
+        *inputs.shape,
+        device=inputs.device,
+        dtype=inputs.dtype,
+    )
+    blocks[0] = inputs
+    curr_block_idx = 0
+    max_logits, o_weighted_sum, l_exp_sum = None, None, None
+
+    for i in range(len(layers)):
+        offset = i % BLOCK_SIZE
+
+        if offset == 0:
+            curr_block_idx += 1
+            max_logits, o_weighted_sum, l_exp_sum, h = phase_1_fn(
+                query_w[i : i + BLOCK_SIZE], blocks[:curr_block_idx]
+            )
+        else:
+            h = phase_2_fn(
+                blocks[curr_block_idx],
+                query_w[i],
+                max_logits[offset],
+                l_exp_sum[offset],
+                o_weighted_sum[offset],
+            )
+
+        blocks[curr_block_idx] += layers[i](h.to(inputs.dtype))
+
+    _, _, _, h = phase_1_fn(query_w[-1:], blocks)
+    return h.to(inputs.dtype)
+
+
 class SwiGLU(nn.Module):
     def __init__(self):
         super().__init__()
@@ -1161,13 +1272,77 @@ class SwiGLU(nn.Module):
         return self.linear2(F.silu(gate) * h1)
 
 
-inputs = torch.randn(B, T, D, device=DEVICE, dtype=DTYPE)
-pseudo_queries = torch.randn(
-    L + 1,
-    D,
-    device=DEVICE,
-    dtype=DTYPE,
-    requires_grad=True,
-)
-layers_swiglu = [SwiGLU() for _ in range(L)]
-out = production_forward(inputs, pseudo_queries, layers_swiglu)
+class Identity(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x
+
+
+def bench(fn, *args, warmup=5, runs=20):
+    for _ in range(warmup):
+        fn(*args)
+
+    torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    for _ in range(runs):
+        fn(*args)
+    torch.cuda.synchronize()
+
+    return (time.perf_counter() - t0) / runs * 1000
+
+
+for i in range(10):
+    inputs = torch.randn(B, T, D, device=DEVICE, dtype=DTYPE)
+    layers_swiglu = [SwiGLU() for _ in range(L)]
+    layers_identity = [Identity() for _ in range(L)]
+
+    pseudo_queries_zeros = torch.zeros(
+        L + 1,
+        D,
+        device=DEVICE,
+        dtype=DTYPE,
+        requires_grad=True,
+    )
+    pseudo_queries_randn = torch.randn(
+        L + 1,
+        D,
+        device=DEVICE,
+        dtype=DTYPE,
+        requires_grad=True,
+    )
+
+    args_identity = (inputs, pseudo_queries_randn, layers_identity)
+
+    args_swiglu_zeros = (inputs, pseudo_queries_zeros, layers_swiglu)
+    args_swiglu_randn = (inputs, pseudo_queries_randn, layers_swiglu)
+
+    out_paper_zeros = paper_forward(*args_swiglu_zeros)
+    out_paper_randn = paper_forward(*args_swiglu_randn)
+
+    print(f"mean abs randn paper: {out_paper_zeros.abs().mean()}")
+    print(f"mean abs zeros paper: {out_paper_randn.abs().mean()}")
+
+    funcs_to_bench = [
+        ("torch_compile_forward", torch_compile_forward),
+        ("production_forward", production_forward),
+        ("paper_forward", paper_forward),
+    ]
+    random.shuffle(funcs_to_bench)
+
+    for name, func in funcs_to_bench:
+        print(f"{name}: {bench(func, *args_identity)} ms")
+
+        abs_difference_zeros = (out_paper_zeros - func(*args_swiglu_zeros)).abs()
+        abs_difference_randn = (out_paper_randn - func(*args_swiglu_randn)).abs()
+
+        print(f"mean abs difference zeros: {abs_difference_zeros.mean()}")
+        print(f"mean abs difference randn: {abs_difference_randn.mean()}")
+        print(
+            f"mean relative difference zeros: {(abs_difference_zeros / (out_paper_zeros.abs() + 1e-3)).mean()}"
+        )
+        print(
+            f"mean relative difference randn: {(abs_difference_randn / (out_paper_randn.abs() + 1e-3)).mean()}"
+        )
+    print()
