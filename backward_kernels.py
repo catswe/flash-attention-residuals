@@ -961,34 +961,23 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             dtype=torch.float32,
         )
 
-        def run_layer_backward(layer_idx, layer_input_buf, grad_update_f32):
+        def run_saved_layer_backward(layer_idx, layer_input, update, grad_update_f32):
             params_i = layer_param_groups[layer_idx]
             active_param_indices = [
                 j for j, p in enumerate(params_i) if p.requires_grad
             ]
             active_params = [params_i[j] for j in active_param_indices]
 
-            with torch.enable_grad():
-                layer_input = layer_input_buf.detach().requires_grad_(True)
-                update = layers[layer_idx](layer_input)
+            grad_results = torch.autograd.grad(
+                outputs=update,
+                inputs=(layer_input, *active_params),
+                grad_outputs=grad_update_f32.to(dtype=update.dtype),
+                retain_graph=False,
+                create_graph=False,
+                allow_unused=False,
+            )
 
-                grad_results = torch.autograd.grad(
-                    outputs=update,
-                    inputs=(layer_input, *active_params),
-                    grad_outputs=grad_update_f32.to(dtype=update.dtype),
-                    retain_graph=False,
-                    create_graph=False,
-                    allow_unused=False,
-                )
-
-            grad_layer_input = grad_results[0]
-            if grad_layer_input is None:
-                grad_layer_input_f32 = torch.zeros_like(
-                    layer_input_buf,
-                    dtype=torch.float32,
-                )
-            else:
-                grad_layer_input_f32 = grad_layer_input.to(torch.float32).contiguous()
+            grad_layer_input = grad_results[0].to(torch.float32).contiguous()
 
             base = param_offsets[layer_idx]
             for local_idx, param_grad in zip(active_param_indices, grad_results[1:]):
@@ -997,7 +986,7 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                         param_grad.to(torch.float32)
                     )
 
-            return grad_layer_input_f32
+            return grad_layer_input
 
         final_out_recomputed = torch.empty(
             1,
@@ -1110,6 +1099,9 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             # q > 0 is written by phase-2 backward.
             grad_phase1_lse[0].zero_()
 
+            layer_input_recomputed_list = []
+            layer_update_list = []
+
             with torch.no_grad():
                 phase_1_batched_interblock_attention(
                     block_representations[:curr_block_idx],
@@ -1119,21 +1111,18 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     eps=eps,
                 )
 
-                for query_offset in range(num_queries):
-                    layer_idx = block_start + query_offset
+            for query_offset in range(num_queries):
+                layer_idx = block_start + query_offset
 
-                    if query_offset == 0:
-                        layer_input_recomputed = phase1_out[query_offset]
-                    else:
-                        partial_before = intrablock_partial_before_scratch[
-                            query_offset - 1
-                        ]
-                        partial_before.copy_(partial_recompute)
+                if query_offset == 0:
+                    layer_input_recomputed = phase1_out[query_offset]
+                else:
+                    partial_before = intrablock_partial_before_scratch[query_offset - 1]
+                    partial_before.copy_(partial_recompute)
 
-                        layer_input_recomputed = block_layer_input_scratch[
-                            query_offset - 1
-                        ]
+                    layer_input_recomputed = block_layer_input_scratch[query_offset - 1]
 
+                    with torch.no_grad():
                         phase_2_online_softmax_merge_intrablock_out(
                             partial_before,
                             pseudo_queries[layer_idx],
@@ -1143,12 +1132,20 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                             eps=eps,
                         )
 
-                    update = layers[layer_idx](layer_input_recomputed)
+                with torch.enable_grad():
+                    layer_input_for_grad = (
+                        layer_input_recomputed.detach().requires_grad_(True)
+                    )
+                    update = layers[layer_idx](layer_input_for_grad)
 
+                layer_input_recomputed_list.append(layer_input_for_grad)
+                layer_update_list.append(update)
+
+                with torch.no_grad():
                     if query_offset == 0:
-                        partial_recompute.copy_(update)
+                        partial_recompute.copy_(update.detach())
                     else:
-                        partial_recompute.add_(update)
+                        partial_recompute.add_(update.detach())
 
             # This slot is dead after this block; mutate it in-place as the running
             # gradient wrt the current intrablock partial.
@@ -1162,9 +1159,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 else:
                     layer_input_recomputed = block_layer_input_scratch[query_offset - 1]
 
-                grad_layer_input = run_layer_backward(
+                grad_layer_input = run_saved_layer_backward(
                     layer_idx,
-                    layer_input_recomputed,
+                    layer_input_recomputed_list[query_offset],
+                    layer_update_list[query_offset],
                     grad_curr_partial,
                 )
 
