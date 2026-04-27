@@ -1,4 +1,5 @@
-# 30% speedup over optimized torch.compile implementation of the paper’s two-phase batched inference with online softmax
+## Flash Attention Residuals
+30% speedup over optimized torch.compile implementation of the paper’s two-phase batched inference with online softmax
 
 ## Credits:
 Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for advising on and supporting the development of this kernel.
