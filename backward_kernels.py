@@ -18,7 +18,7 @@ L = 32
 BLOCK_SIZE = 8
 NUM_BLOCKS = math.ceil(L / BLOCK_SIZE) + 1
 
-B, T, D = 32, 1024, 512
+B, T, D = 64, 2048, 512
 BT = B * T
 
 EPS = torch.finfo(torch.float32).eps

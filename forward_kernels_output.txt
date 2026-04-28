@@ -21,14 +21,73 @@ important use case and you want to speed it up with online
 softmax.
 
   warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:7627: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
 
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.15234375
-paper_forward: 72.13672900002166 ms
-mean abs difference zeros: 0.0
-mean abs difference randn: 0.0
-mean relative difference zeros: 0.0
-mean relative difference randn: 0.0
+  warnings.warn(
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1474609375
+
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/select_algorithm.py:3464: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  current_size = base.storage().size()
+Autotune Choices Stats:
+{"num_choices": 18, "num_triton_choices": 17, "best_kernel": "triton_mm_10", "best_kernel_desc": "ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4", "best_time": 0.362527996301651, "best_triton_pos": 0}
+AUTOTUNE mm(524288x1024, 1024x8)
+strides: [1024, 1], [1, 1024]
+dtypes: torch.bfloat16, torch.bfloat16
+  triton_mm_10 0.3625 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+  triton_mm_16 0.3626 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8
+  triton_mm_4 0.3629 ms 99.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_15 0.3677 ms 98.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=8
+  triton_mm_1 0.3684 ms 98.4% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2
+  triton_mm_14 0.3707 ms 97.8% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  triton_mm_7 0.3707 ms 97.8% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  mm 0.3896 ms 93.1% 
+  triton_mm_3 0.4939 ms 73.4% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_9 0.5088 ms 71.2% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.6529 seconds and 0.6245 seconds precompiling for 18 choices
+Autotune Choices Stats:
+{"num_choices": 18, "num_triton_choices": 17, "best_kernel": "triton_mm_33", "best_kernel_desc": "ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8", "best_time": 0.712768018245697, "best_triton_pos": 0}
+AUTOTUNE mm(1048576x1024, 1024x8)
+strides: [1024, 1], [1, 1024]
+dtypes: torch.bfloat16, torch.bfloat16
+  triton_mm_33 0.7128 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8
+  triton_mm_21 0.7132 ms 99.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_27 0.7133 ms 99.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+  triton_mm_32 0.7231 ms 98.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=8
+  triton_mm_18 0.7259 ms 98.2% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2
+  triton_mm_24 0.7271 ms 98.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  triton_mm_31 0.7313 ms 97.5% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  mm 0.7714 ms 92.4% 
+  triton_mm_20 0.9959 ms 71.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_26 1.0258 ms 69.5% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.6862 seconds and 0.2804 seconds precompiling for 18 choices
+Autotune Choices Stats:
+{"num_choices": 18, "num_triton_choices": 17, "best_kernel": "triton_mm_38", "best_kernel_desc": "ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4", "best_time": 1.4133119583129883, "best_triton_pos": 0}
+AUTOTUNE mm(2097152x1024, 1024x8)
+strides: [1024, 1], [1, 1024]
+dtypes: torch.bfloat16, torch.bfloat16
+  triton_mm_38 1.4133 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_50 1.4140 ms 99.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8
+  triton_mm_44 1.4145 ms 99.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+  triton_mm_49 1.4356 ms 98.4% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=8
+  triton_mm_35 1.4407 ms 98.1% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2
+  triton_mm_41 1.4431 ms 97.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  triton_mm_48 1.4505 ms 97.4% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
+  mm 1.5279 ms 92.5% 
+  triton_mm_37 1.9356 ms 73.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
+  triton_mm_43 2.0014 ms 70.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.7640 seconds and 0.2215 seconds precompiling for 18 choices
+
+torch_compile_forward: 247.9817523500003 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.0029449462890625
+mean relative difference zeros: 0.0201416015625
+mean relative difference randn: 0.06982421875
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
@@ -50,9 +109,9 @@ Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_wa
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
 Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (1, 512, 8, 1, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.48s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
+with key as (1, 1024, 8, 1, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 10.37s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None;
 Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
 Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
 Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
@@ -74,9 +133,9 @@ Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num
 Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
 Autotuning kernel phase_2_online_softmax_merge_intrablock_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
 Triton autotuning for function phase_2_online_softmax_merge_intrablock_kernel,
-with key as (512, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.bfloat16'),
-finished after 2.31s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+with key as (1024, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32', 'torch.bfloat16'),
+finished after 4.79s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None;
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
@@ -98,9 +157,9 @@ Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_wa
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
 Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (2, 512, 8, 2, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.50s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
+with key as (2, 1024, 8, 2, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 12.47s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None;
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
@@ -122,56 +181,8 @@ Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_wa
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
 Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (3, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.56s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (4, 512, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.56s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (5, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.63s,
+with key as (3, 1024, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 15.53s,
 best config selected: num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None;
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
@@ -194,285 +205,299 @@ Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_wa
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
 Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
 Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (6, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.65s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (7, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.65s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (8, 512, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
-finished after 2.66s,
-best config selected: num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None;
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
-Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
-Triton autotuning for function phase_1_batched_interblock_attention_kernel,
-with key as (9, 512, 1, 16, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16'),
-finished after 2.50s,
+with key as (4, 1024, 8, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 15.96s,
 best config selected: num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None;
-production_forward: 12.836475999984032 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0023193359375
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.053466796875
-
-Autotune Choices Stats:
-{"num_choices": 18, "num_triton_choices": 17, "best_kernel": "triton_mm_160", "best_kernel_desc": "ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2", "best_time": 0.04198399931192398, "best_triton_pos": 0}
-AUTOTUNE mm(32768x512, 512x8)
-strides: [512, 1], [1, 512]
-dtypes: torch.bfloat16, torch.bfloat16
-  triton_mm_160 0.0420 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2
-  triton_mm_169 0.0420 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
-  triton_mm_175 0.0420 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8
-  triton_mm_163 0.0430 ms 97.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
-  triton_mm_166 0.0430 ms 97.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
-  triton_mm_173 0.0430 ms 97.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
-  triton_mm_174 0.0440 ms 95.3% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=8
-  mm 0.0502 ms 83.7% 
-  triton_mm_167 0.0502 ms 83.7% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
-  triton_mm_162 0.0522 ms 80.4% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
-SingleProcess AUTOTUNE benchmarking takes 0.3397 seconds and 0.6907 seconds precompiling for 18 choices
-Autotune Choices Stats:
-{"num_choices": 18, "num_triton_choices": 17, "best_kernel": "triton_mm_186", "best_kernel_desc": "ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4", "best_time": 0.07168000191450119, "best_triton_pos": 0}
-AUTOTUNE mm(65536x512, 512x8)
-strides: [512, 1], [1, 512]
-dtypes: torch.bfloat16, torch.bfloat16
-  triton_mm_186 0.0717 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
-  triton_mm_191 0.0717 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=8
-  triton_mm_192 0.0717 ms 100.0% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=8
-  triton_mm_183 0.0727 ms 98.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
-  triton_mm_190 0.0727 ms 98.6% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=64, BLOCK_M=128, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=3, num_warps=4
-  triton_mm_180 0.0737 ms 97.2% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
-  triton_mm_177 0.0748 ms 95.9% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=128, BLOCK_M=32, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=2, num_warps=2
-  mm 0.0799 ms 89.7% 
-  triton_mm_179 0.0901 ms 79.5% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=5, num_warps=4
-  triton_mm_185 0.0911 ms 78.7% ACC_TYPE='tl.float32', ALLOW_TF32=False, BLOCK_K=32, BLOCK_M=64, BLOCK_N=16, EVEN_K=True, GROUP_M=8, USE_FAST_ACCUM=False, num_stages=4, num_warps=4
-SingleProcess AUTOTUNE benchmarking takes 0.4108 seconds and 0.4396 seconds precompiling for 18 choices
-
-torch_compile_forward: 17.916064649989494 ms
-mean abs difference zeros: 0.000732421875
-mean abs difference randn: 0.0030517578125
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.0712890625
-
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1494140625
-paper_forward: 72.12876954999956 ms
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention_kernel,
+with key as (5, 1024, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 21.88s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention_kernel,
+with key as (6, 1024, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 22.65s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention_kernel,
+with key as (7, 1024, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 23.78s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention_kernel,
+with key as (8, 1024, 8, 8, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 25.18s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 1, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 2, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 4, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 8, num_ctas: 1, num_stages: 4, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 1, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel phase_1_batched_interblock_attention_kernel with config num_warps: 16, num_ctas: 1, num_stages: 4, maxnreg: None
+Triton autotuning for function phase_1_batched_interblock_attention_kernel,
+with key as (9, 1024, 1, 16, 'torch.bfloat16', 'torch.bfloat16', 'torch.bfloat16'),
+finished after 10.33s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+production_forward: 178.33317925000074 ms
+mean abs difference zeros: 0.1162109375
+mean abs difference randn: 0.0947265625
+mean relative difference zeros: 2.984375
+mean relative difference randn: 1.9765625
+paper_forward: 1136.8368942499956 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-torch_compile_forward: 17.921794399990176 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0030059814453125
-mean relative difference zeros: 0.020263671875
-mean relative difference randn: 0.07080078125
-production_forward: 12.845793249971393 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0023040771484375
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.0537109375
 
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1494140625
-torch_compile_forward: 17.915741449996858 ms
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1474609375
+paper_forward: 1135.5150077500014 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference zeros: 0.0
+mean relative difference randn: 0.0
+production_forward: 178.28940695000028 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.1279296875
+mean relative difference zeros: 2.890625
+mean relative difference randn: 2.65625
+torch_compile_forward: 247.8849200500008 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.0029754638671875
+mean relative difference zeros: 0.0201416015625
+mean relative difference randn: 0.0703125
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1484375
+paper_forward: 1136.915977800004 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference zeros: 0.0
+mean relative difference randn: 0.0
+torch_compile_forward: 247.95112639999957 ms
 mean abs difference zeros: 0.000728607177734375
 mean abs difference randn: 0.00299072265625
-mean relative difference zeros: 0.020263671875
+mean relative difference zeros: 0.0201416015625
 mean relative difference randn: 0.07080078125
-paper_forward: 72.13217675002852 ms
+production_forward: 178.49872454999627 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.1259765625
+mean relative difference zeros: 2.90625
+mean relative difference randn: 2.609375
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1474609375
+production_forward: 178.46125500000198 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.12353515625
+mean relative difference zeros: 2.890625
+mean relative difference randn: 2.59375
+torch_compile_forward: 247.91782424999838 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.0029144287109375
+mean relative difference zeros: 0.0201416015625
+mean relative difference randn: 0.0693359375
+paper_forward: 1136.8378655000015 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-production_forward: 12.843594700007088 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0022735595703125
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.053466796875
 
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1494140625
-production_forward: 12.838377449998006 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0023651123046875
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.05517578125
-paper_forward: 72.12905129999854 ms
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.146484375
+paper_forward: 1136.6526726499956 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-torch_compile_forward: 17.91884614999617 ms
-mean abs difference zeros: 0.000732421875
-mean abs difference randn: 0.0030975341796875
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.07275390625
-
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1484375
-paper_forward: 72.13137844996709 ms
-mean abs difference zeros: 0.0
-mean abs difference randn: 0.0
-mean relative difference zeros: 0.0
-mean relative difference randn: 0.0
-torch_compile_forward: 17.91358675000083 ms
-mean abs difference zeros: 0.000732421875
-mean abs difference randn: 0.0029296875
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.06982421875
-production_forward: 12.844537050023064 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0022430419921875
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.052734375
-
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1474609375
-paper_forward: 72.12247769998612 ms
-mean abs difference zeros: 0.0
-mean abs difference randn: 0.0
-mean relative difference zeros: 0.0
-mean relative difference randn: 0.0
-torch_compile_forward: 17.92426889996932 ms
-mean abs difference zeros: 0.000732421875
-mean abs difference randn: 0.0028533935546875
-mean relative difference zeros: 0.020263671875
-mean relative difference randn: 0.06787109375
-production_forward: 12.834599349980635 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002166748046875
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.05126953125
-
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1455078125
-torch_compile_forward: 17.91550040002221 ms
+torch_compile_forward: 247.88993220000748 ms
 mean abs difference zeros: 0.000728607177734375
 mean abs difference randn: 0.0028839111328125
 mean relative difference zeros: 0.0201416015625
 mean relative difference randn: 0.0693359375
-production_forward: 12.839568050003436 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002197265625
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.05224609375
-paper_forward: 72.13045225003043 ms
+production_forward: 178.38065084999926 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.1240234375
+mean relative difference zeros: 2.90625
+mean relative difference randn: 2.609375
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1474609375
+paper_forward: 1135.516159149995 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1474609375
-paper_forward: 72.10788279999178 ms
-mean abs difference zeros: 0.0
-mean abs difference randn: 0.0
-mean relative difference zeros: 0.0
-mean relative difference randn: 0.0
-torch_compile_forward: 17.91287934997854 ms
+torch_compile_forward: 247.88387190000094 ms
 mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.0030059814453125
+mean abs difference randn: 0.0029449462890625
 mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.07177734375
-production_forward: 12.843354750020808 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002288818359375
-mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.053955078125
+mean relative difference randn: 0.0703125
+production_forward: 178.46799234999935 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.1259765625
+mean relative difference zeros: 2.90625
+mean relative difference randn: 2.625
 
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.146484375
-torch_compile_forward: 17.924464350016933 ms
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.146484375
+production_forward: 178.506623699991 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.12353515625
+mean relative difference zeros: 2.890625
+mean relative difference randn: 2.59375
+torch_compile_forward: 247.88756345000138 ms
 mean abs difference zeros: 0.000728607177734375
 mean abs difference randn: 0.002899169921875
 mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.06884765625
-paper_forward: 72.11381985002845 ms
+mean relative difference randn: 0.0693359375
+paper_forward: 1136.9693670500055 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-production_forward: 12.83955394997065 ms
-mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002197265625
-mean relative difference zeros: 0.02001953125
-mean relative difference randn: 0.05224609375
 
-mean abs randn paper: 0.11572265625
-mean abs zeros paper: 0.1474609375
-paper_forward: 72.13777669999217 ms
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1484375
+torch_compile_forward: 247.9005083000061 ms
+mean abs difference zeros: 0.000728607177734375
+mean abs difference randn: 0.00299072265625
+mean relative difference zeros: 0.0201416015625
+mean relative difference randn: 0.07080078125
+paper_forward: 1136.9410527500008 ms
 mean abs difference zeros: 0.0
 mean abs difference randn: 0.0
 mean relative difference zeros: 0.0
 mean relative difference randn: 0.0
-production_forward: 12.834435100012342 ms
+production_forward: 178.2867152499989 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.126953125
+mean relative difference zeros: 2.890625
+mean relative difference randn: 2.640625
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.146484375
+torch_compile_forward: 247.88164665000068 ms
 mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002197265625
+mean abs difference randn: 0.0029296875
 mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.052001953125
-torch_compile_forward: 17.922368250037835 ms
+mean relative difference randn: 0.06982421875
+production_forward: 178.45250799999803 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.1259765625
+mean relative difference zeros: 2.890625
+mean relative difference randn: 2.65625
+paper_forward: 1136.8236899499948 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference zeros: 0.0
+mean relative difference randn: 0.0
+
+mean abs zeros paper: 0.11572265625
+mean abs randn paper: 0.1484375
+paper_forward: 1136.9397939500004 ms
+mean abs difference zeros: 0.0
+mean abs difference randn: 0.0
+mean relative difference zeros: 0.0
+mean relative difference randn: 0.0
+production_forward: 178.47896824999907 ms
+mean abs difference zeros: 0.10986328125
+mean abs difference randn: 0.126953125
+mean relative difference zeros: 2.90625
+mean relative difference randn: 2.640625
+`torch_compile_forward: 247.92824055000438 ms
 mean abs difference zeros: 0.000728607177734375
-mean abs difference randn: 0.002899169921875
+mean abs difference randn: 0.0029144287109375
 mean relative difference zeros: 0.0201416015625
-mean relative difference randn: 0.06884765625
+mean relative difference randn: 0.0693359375
 

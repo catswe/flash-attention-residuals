@@ -4,7 +4,7 @@
 
 > **20% reduction in training memory** (without activation checkpointing)*
 
-*Dependent on problem size and setup
+*Benchmarked on H100. Dependent on problem size and setup.
 
 ## Credits:
 Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for advising on and supporting the development of this kernel.
