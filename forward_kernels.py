@@ -428,8 +428,8 @@ for i in range(10):
         out_paper_zeros = paper_forward(*args_swiglu_zeros)
         out_paper_randn = paper_forward(*args_swiglu_randn)
 
-        print(f"mean abs randn paper: {out_paper_zeros.abs().mean()}")
-        print(f"mean abs zeros paper: {out_paper_randn.abs().mean()}")
+        print(f"mean abs zeros paper: {out_paper_zeros.abs().mean()}")
+        print(f"mean abs randn paper: {out_paper_randn.abs().mean()}")
 
         funcs_to_bench = [
             ("torch_compile_forward", torch_compile_forward),

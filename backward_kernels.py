@@ -1602,9 +1602,8 @@ for i in range(10):
         dtype=DTYPE,
     )
 
-    args_swiglu_zeros = (inputs, pseudo_queries_zeros, layers_swiglu)
     args_swiglu_randn = (inputs, pseudo_queries_randn, layers_swiglu)
-    args_identity_zeros = (inputs, pseudo_queries_zeros, layers_identity)
+    args_identity_randn = (inputs, pseudo_queries_zeros, layers_identity)
 
     funcs_to_bench = [
         ("torch_compile_phases_forward", torch_compile_phases_forward),
@@ -1614,10 +1613,9 @@ for i in range(10):
 
     random.shuffle(funcs_to_bench)
 
-    print_bench_group("swiglu / zero queries", args_swiglu_zeros)
-    print_bench_group("swiglu / randn queries", args_swiglu_randn)
-    print_bench_group("identity / zeros queries", args_identity_zeros)
-
+    print_bench_group("identity layers + randn queries", args_identity_randn)
+    
+    print("grads check for swiglu layers + randn queries")
     compare_grads(
         "paper_forward",
         paper_forward,
