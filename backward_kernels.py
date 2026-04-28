@@ -376,8 +376,8 @@ reduce_configs = [
         num_warps=num_warps,
         num_stages=1,
     )
-    for block_batch_seq in [64, 128, 256]
-    for block_hidden in [16, 32]
+    for block_batch_seq in [128, 256]
+    for block_hidden in [32, 64]
     for num_warps in [4, 8]
 ]
 
@@ -1095,8 +1095,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             grad_phase1_out = grad_block_phase1_out_scratch[:num_queries]
             grad_phase1_lse = grad_block_lse_scratch[:num_queries]
 
-            # q == 0 has no phase-2 merge, so its lse gradient is zero.
-            # q > 0 is written by phase-2 backward.
             grad_phase1_lse[0].zero_()
 
             layer_input_recomputed_list = []
@@ -1147,8 +1145,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     else:
                         partial_recompute.add_(update.detach())
 
-            # This slot is dead after this block; mutate it in-place as the running
-            # gradient wrt the current intrablock partial.
             grad_curr_partial = grad_block_representations[curr_block_idx]
 
             for query_offset in range(num_queries - 1, -1, -1):
