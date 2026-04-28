@@ -1,8 +1,8 @@
 ## Flash Attention Residuals
 
-**1.4x faster inference/training** vs. an optimized torch.compile impl. of the paper’s two-phase batched attention with online softmax
+> 1.4x faster inference/training vs. an optimized torch.compile impl. of the paper’s two-phase batched attention with online softmax
 
-**20% reduction in training memory** (without activation checkpointing)
+> 20% reduction in training memory (without activation checkpointing)
 
 ## Credits:
 Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for advising on and supporting the development of this kernel.
