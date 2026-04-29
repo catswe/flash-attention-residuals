@@ -233,6 +233,7 @@ def phase_2_online_softmax_merge_intrablock(
     key=["NUM_SOURCE_BLOCKS", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK", "PADDED_SRC"],
     restore_value=[
         "grad_block_representations_accumulator_ptr",
+        "grad_pseudo_queries_partial_ptr",
     ],
 )
 @triton.jit
@@ -515,6 +516,7 @@ def phase_1_batched_interblock_attention_backward(
     key=["HIDDEN_DIM"],
     restore_value=[
         "grad_intrablock_partial_sum_accumulator_ptr",
+        "grad_pseudo_query_partial_ptr",
     ],
 )
 @triton.jit
@@ -789,6 +791,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     curr_block.copy_(update)
                 else:
                     curr_block.add_(update)
+                    
+                del layer_input, update
+
+            del block_attn_out, 
 
         final_out, _final_lse = phase_1_batched_interblock_attention(
             block_representations,
@@ -837,18 +843,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
 
         grad_block_representations = torch.zeros_like(
             block_representations,
-            dtype=torch.float32,
+            dtype=torch.bfloat16,
         )
         grad_pseudo_queries = torch.zeros_like(
             pseudo_queries,
-            dtype=torch.float32,
-        )
-
-        grad_phase2_pseudo_query_partial = torch.empty(
-            B,
-            T,
-            D,
-            device=device,
             dtype=torch.float32,
         )
 
@@ -885,6 +883,8 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 pseudo_queries[-1:],
                 eps,
             )
+
+            del _final_out_recomputed
 
         grad_pseudo_queries_partial_final = torch.empty(
             1,
@@ -925,23 +925,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             dtype=torch.float32,
         )
 
-        intrablock_partial_before_scratch = torch.empty(
-            max(BLOCK_SIZE - 1, 1),
-            B,
-            T,
-            D,
-            device=device,
-            dtype=block_dtype,
-        )
-
-        partial_recompute = torch.empty(
-            B,
-            T,
-            D,
-            device=device,
-            dtype=block_dtype,
-        )
-
         last_block_start = ((L - 1) // BLOCK_SIZE) * BLOCK_SIZE
 
         for block_start in range(last_block_start, -1, -BLOCK_SIZE):
@@ -962,6 +945,23 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     pseudo_queries[block_start : block_start + num_queries],
                     eps,
                 )
+
+            intrablock_partial_before_scratch = torch.empty(
+                max(num_queries - 1, 1),
+                B,
+                T,
+                D,
+                device=device,
+                dtype=block_dtype,
+            )
+
+            partial_recompute = torch.empty(
+                B,
+                T,
+                D,
+                device=device,
+                dtype=block_dtype,
+            )
 
             for query_offset in range(num_queries):
                 layer_idx = block_start + query_offset
@@ -998,17 +998,25 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     else:
                         partial_recompute.add_(update.detach())
 
+            del partial_recompute
+
             grad_curr_partial = grad_block_representations[curr_block_idx]
 
             for query_offset in range(num_queries - 1, -1, -1):
                 layer_idx = block_start + query_offset
 
+                layer_input = layer_input_recomputed_list[query_offset]
+                layer_update = layer_update_list[query_offset]
+
                 grad_layer_input = run_saved_layer_backward(
                     layer_idx,
-                    layer_input_recomputed_list[query_offset],
-                    layer_update_list[query_offset],
+                    layer_input,
+                    layer_update,
                     grad_curr_partial,
                 )
+
+                layer_input_recomputed_list[query_offset] = None
+                layer_update_list[query_offset] = None
 
                 if query_offset == 0:
                     grad_phase1_out[query_offset].copy_(grad_layer_input)
@@ -1023,18 +1031,18 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                         grad_pseudo_queries[layer_idx],
                         grad_phase1_out[query_offset],
                         grad_phase1_lse[query_offset],
-                        grad_phase2_pseudo_query_partial,
+                        grad_layer_input,
                         eps=eps,
                     )
 
-            grad_pseudo_queries_partial_block = torch.empty(
-                num_queries,
-                B,
-                T,
-                D,
-                device=device,
-                dtype=torch.float32,
-            )
+                del grad_layer_input
+                del layer_input
+                del layer_update
+
+            del layer_input_recomputed_list
+            del layer_update_list
+            del phase1_out
+            del intrablock_partial_before_scratch
 
             phase_1_batched_interblock_attention_backward(
                 block_representations[:curr_block_idx],
@@ -1044,11 +1052,11 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 grad_phase1_lse,
                 grad_block_representations[:curr_block_idx],
                 grad_pseudo_queries[block_start : block_start + num_queries],
-                grad_pseudo_queries_partial_block,
+                grad_phase1_out,
                 eps=eps,
             )
 
-            del grad_pseudo_queries_partial_block
+            del phase1_lse
 
         grad_inputs = (
             grad_block_representations[0].to(block_dtype)
@@ -1345,7 +1353,6 @@ def phase_1_backward(ctx, grad_softmax_outputs, grad_lses):
     has_grad_lses = grad_lses is not None
 
     if grad_lses is None:
-        # Not read by the kernel when has_grad_lses=False.
         grad_lses = lses
     else:
         grad_lses = grad_lses.contiguous()
