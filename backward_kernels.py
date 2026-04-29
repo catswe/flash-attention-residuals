@@ -110,31 +110,43 @@ def phase_1_batched_interblock_attention_kernel(
         )
 
 
+@triton_op("blockwise_attn::phase_1_batched_interblock_attention", mutates_args={})
 def phase_1_batched_interblock_attention(
-    block_representations,
-    pseudo_queries,
-    softmax_outputs,
-    lses,
-    eps=None,
-):
-    NUM_QUERIES = pseudo_queries.shape[0]
-    NUM_SOURCE_BLOCKS = block_representations.shape[0]
+    block_representations: torch.Tensor,
+    pseudo_queries: torch.Tensor,
+    eps: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    num_source_blocks = block_representations.shape[0]
+    num_queries = pseudo_queries.shape[0]
+    B_, T_, D_ = block_representations.shape[1:]
+    BT_ = B_ * T_
 
-    if eps is None:
-        eps = EPS
+    softmax_outputs = torch.empty(
+        (num_queries, B_, T_, D_),
+        device=block_representations.device,
+        dtype=torch.bfloat16,
+    )
 
-    phase_1_batched_interblock_attention_kernel[(BT,)](
+    lses = torch.empty(
+        (num_queries, B_, T_),
+        device=block_representations.device,
+        dtype=torch.float32,
+    )
+
+    wrap_triton(phase_1_batched_interblock_attention_kernel)[(BT_,)](
         block_representations,
         pseudo_queries,
         softmax_outputs,
         lses,
         eps,
-        NUM_SOURCE_BLOCKS,
-        BT,
-        D,
-        NUM_QUERIES,
-        triton.next_power_of_2(NUM_SOURCE_BLOCKS),
+        num_source_blocks,
+        BT_,
+        D_,
+        num_queries,
+        triton.next_power_of_2(num_source_blocks),
     )
+
+    return softmax_outputs, lses
 
 
 @triton.autotune(
@@ -741,36 +753,14 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
         )
         block_representations[0].copy_(inputs)
 
-        block_attn_out_scratch = torch.empty(
-            BLOCK_SIZE,
-            B,
-            T,
-            D,
-            device=DEVICE,
-            dtype=torch.bfloat16,
-        )
-
-        block_lse_scratch = torch.empty(
-            BLOCK_SIZE,
-            B,
-            T,
-            device=DEVICE,
-            dtype=torch.float32,
-        )
-
         for block_start in range(0, L, BLOCK_SIZE):
             curr_block_idx = block_start // BLOCK_SIZE + 1
             num_queries = min(BLOCK_SIZE, L - block_start)
 
-            block_attn_out = block_attn_out_scratch[:num_queries]
-            block_lse = block_lse_scratch[:num_queries]
-
-            phase_1_batched_interblock_attention(
+            block_attn_out, block_lse = phase_1_batched_interblock_attention(
                 block_representations[:curr_block_idx],
                 pseudo_queries[block_start : block_start + num_queries],
-                block_attn_out,
-                block_lse,
-                eps=eps,
+                eps,
             )
 
             curr_block = block_representations[curr_block_idx]
@@ -796,28 +786,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 else:
                     curr_block.add_(update)
 
-        final_out = torch.empty(
-            B,
-            T,
-            D,
-            device=DEVICE,
-            dtype=inputs.dtype,
-        )
-
-        final_lse_scratch = torch.empty(
-            1,
-            B,
-            T,
-            device=DEVICE,
-            dtype=torch.float32,
-        )
-
-        phase_1_batched_interblock_attention(
+        final_out, _final_lse = phase_1_batched_interblock_attention(
             block_representations,
             pseudo_queries[-1:],
-            final_out.unsqueeze(0),
-            final_lse_scratch,
-            eps=eps,
+            eps,
         )
 
         ctx.save_for_backward(
@@ -828,7 +800,7 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
         ctx.eps = eps
         ctx.num_layer_params = len(flat_layer_params)
 
-        return final_out
+        return final_out[0].to(inputs.dtype)
 
     @staticmethod
     def backward(ctx, *grad_outputs):
@@ -842,7 +814,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
 
         device = block_representations.device
         block_dtype = block_representations.dtype
-        attn_dtype = torch.bfloat16
 
         grad_output = grad_output.contiguous()
 
@@ -913,29 +884,11 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
 
             return grad_layer_input
 
-        final_out_recomputed = torch.empty(
-            1,
-            B,
-            T,
-            D,
-            device=device,
-            dtype=attn_dtype,
-        )
-        final_lse = torch.empty(
-            1,
-            B,
-            T,
-            device=device,
-            dtype=torch.float32,
-        )
-
         with torch.no_grad():
-            phase_1_batched_interblock_attention(
+            _final_out_recomputed, final_lse = phase_1_batched_interblock_attention(
                 block_representations,
                 pseudo_queries[-1:],
-                final_out_recomputed,
-                final_lse,
-                eps=eps,
+                eps,
             )
 
         phase_1_batched_interblock_attention_backward(
@@ -948,22 +901,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             grad_pseudo_queries[-1:],
             grad_pseudo_queries_partial[:1],
             eps=eps,
-        )
-
-        block_phase1_out_scratch = torch.empty(
-            BLOCK_SIZE,
-            B,
-            T,
-            D,
-            device=device,
-            dtype=attn_dtype,
-        )
-        block_lse_scratch = torch.empty(
-            BLOCK_SIZE,
-            B,
-            T,
-            device=device,
-            dtype=torch.float32,
         )
 
         grad_block_phase1_out_scratch = torch.empty(
@@ -1005,9 +942,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             curr_block_idx = block_start // BLOCK_SIZE + 1
             num_queries = min(BLOCK_SIZE, L - block_start)
 
-            phase1_out = block_phase1_out_scratch[:num_queries]
-            phase1_lse = block_lse_scratch[:num_queries]
-
             grad_phase1_out = grad_block_phase1_out_scratch[:num_queries]
             grad_phase1_lse = grad_block_lse_scratch[:num_queries]
 
@@ -1017,12 +951,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             layer_update_list = []
 
             with torch.no_grad():
-                phase_1_batched_interblock_attention(
+                phase1_out, phase1_lse = phase_1_batched_interblock_attention(
                     block_representations[:curr_block_idx],
                     pseudo_queries[block_start : block_start + num_queries],
-                    phase1_out,
-                    phase1_lse,
-                    eps=eps,
+                    eps,
                 )
 
             for query_offset in range(num_queries):
@@ -1147,7 +1079,8 @@ def production_forward(inputs, pseudo_queries, layers, eps=None):
     )
 
 
-@torch.compile(mode="max-autotune")
+# TODO: do max-autotune
+@torch.compile(mode="max-autotune-no-cudagraphs")
 def naive_attention_residual(pseudo_query, values):
     keys = F.rms_norm(values, (values.shape[-1],), eps=EPS)
 
@@ -1186,7 +1119,7 @@ def paper_forward(inputs, pseudo_queries, layers):
     )
 
 
-@torch.compile(mode="max-autotune")
+@torch.compile(mode="max-autotune-no-cudagraphs")
 def phase_1_fn(query, value):
     query = query.to(torch.float32)
     value = value.to(torch.float32)
@@ -1211,7 +1144,7 @@ def phase_1_fn(query, value):
     return lse, normalized.to(torch.bfloat16), h
 
 
-@torch.compile(mode="max-autotune")
+@torch.compile(mode="max-autotune-no-cudagraphs")
 def phase_2_fn(current_block_values, query_vector, prev_lse, prev_normalized):
     query_vector_f32 = query_vector.to(torch.float32)
     prev_normalized_f32 = prev_normalized.to(torch.float32)
@@ -1474,7 +1407,7 @@ def print_bench_group(args):
     print()
 
 
-for i in range(10):
+for i in range(5):
     inputs = torch.randn(
         B,
         T,
