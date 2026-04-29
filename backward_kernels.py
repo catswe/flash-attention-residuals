@@ -11,9 +11,8 @@ import triton
 import triton.language as tl
 import os
 
-from typing import Tuple
 from torch.library import triton_op, wrap_triton
-
+from torch.utils.checkpoint import checkpoint
 
 os.environ["TRITON_PRINT_AUTOTUNING"] = "1"
 
@@ -467,8 +466,10 @@ def phase_1_batched_interblock_attention_backward(
     grad_pseudo_queries_partial,
     eps=None,
 ):
-    NUM_QUERIES = pseudo_queries.shape[0]
-    NUM_SOURCE_BLOCKS = block_representations.shape[0]
+    num_queries = pseudo_queries.shape[0]
+    num_source_blocks = block_representations.shape[0]
+    B_, T_, D_ = block_representations.shape[1:]
+    BT_ = B_ * T_
 
     if eps is None:
         eps = EPS
@@ -477,7 +478,7 @@ def phase_1_batched_interblock_attention_backward(
     if grad_lses is None:
         grad_lses = lses
 
-    phase_1_batched_interblock_attention_backward_kernel[(BT,)](
+    phase_1_batched_interblock_attention_backward_kernel[(BT_,)](
         block_representations,
         pseudo_queries,
         lses,
@@ -486,26 +487,26 @@ def phase_1_batched_interblock_attention_backward(
         grad_block_representations,
         grad_pseudo_queries_partial,
         eps,
-        NUM_SOURCE_BLOCKS,
-        BT,
-        D,
-        NUM_QUERIES,
-        triton.next_power_of_2(NUM_SOURCE_BLOCKS),
+        num_source_blocks,
+        BT_,
+        D_,
+        num_queries,
+        triton.next_power_of_2(num_source_blocks),
         has_grad_lses,
     )
 
     phase_1_reduce_grad_pseudo_queries_kernel[
         lambda META: (
-            triton.cdiv(BT, META["BLOCK_BATCH_SEQ"]),
-            NUM_QUERIES,
-            triton.cdiv(D, META["BLOCK_HIDDEN"]),
+            triton.cdiv(BT_, META["BLOCK_BATCH_SEQ"]),
+            num_queries,
+            triton.cdiv(D_, META["BLOCK_HIDDEN"]),
         )
     ](
         grad_pseudo_queries_partial,
         grad_pseudo_queries,
-        BT,
-        D,
-        NUM_QUERIES,
+        BT_,
+        D_,
+        num_queries,
     )
 
 
@@ -710,10 +711,13 @@ def phase_2_online_softmax_merge_intrablock_backward(
     grad_pseudo_query_partial,
     eps=None,
 ):
+    B_, T_, D_ = intrablock_partial_sum.shape
+    BT_ = B_ * T_
+
     if eps is None:
         eps = EPS
 
-    phase_2_online_softmax_merge_intrablock_backward_kernel[(BT,)](
+    phase_2_online_softmax_merge_intrablock_backward_kernel[(BT_,)](
         intrablock_partial_sum,
         pseudo_query,
         phase1_interblock_normalized_output,
@@ -724,19 +728,19 @@ def phase_2_online_softmax_merge_intrablock_backward(
         grad_phase1_interblock_normalized_output,
         grad_phase1_interblock_logsumexp,
         eps,
-        D,
+        D_,
     )
 
     phase_2_reduce_grad_pseudo_query_kernel[
         lambda META: (
-            triton.cdiv(BT, META["BLOCK_BATCH_SEQ"]),
-            triton.cdiv(D, META["BLOCK_HIDDEN"]),
+            triton.cdiv(BT_, META["BLOCK_BATCH_SEQ"]),
+            triton.cdiv(D_, META["BLOCK_HIDDEN"]),
         )
     ](
         grad_pseudo_query_partial,
         grad_pseudo_query,
-        BT,
-        D,
+        BT_,
+        D_,
     )
 
 
@@ -840,15 +844,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             dtype=torch.float32,
         )
 
-        grad_pseudo_queries_partial = torch.empty(
-            BLOCK_SIZE,
-            B,
-            T,
-            D,
-            device=device,
-            dtype=torch.float32,
-        )
-
         grad_phase2_pseudo_query_partial = torch.empty(
             B,
             T,
@@ -891,6 +886,15 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 eps,
             )
 
+        grad_pseudo_queries_partial_final = torch.empty(
+            1,
+            B,
+            T,
+            D,
+            device=device,
+            dtype=torch.float32,
+        )
+
         phase_1_batched_interblock_attention_backward(
             block_representations,
             pseudo_queries[-1:],
@@ -899,9 +903,11 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             None,
             grad_block_representations,
             grad_pseudo_queries[-1:],
-            grad_pseudo_queries_partial[:1],
+            grad_pseudo_queries_partial_final,
             eps=eps,
         )
+
+        del grad_pseudo_queries_partial_final
 
         grad_block_phase1_out_scratch = torch.empty(
             BLOCK_SIZE,
@@ -1021,6 +1027,15 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                         eps=eps,
                     )
 
+            grad_pseudo_queries_partial_block = torch.empty(
+                num_queries,
+                B,
+                T,
+                D,
+                device=device,
+                dtype=torch.float32,
+            )
+
             phase_1_batched_interblock_attention_backward(
                 block_representations[:curr_block_idx],
                 pseudo_queries[block_start : block_start + num_queries],
@@ -1029,9 +1044,11 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 grad_phase1_lse,
                 grad_block_representations[:curr_block_idx],
                 grad_pseudo_queries[block_start : block_start + num_queries],
-                grad_pseudo_queries_partial[:num_queries],
+                grad_pseudo_queries_partial_block,
                 eps=eps,
             )
+
+            del grad_pseudo_queries_partial_block
 
         grad_inputs = (
             grad_block_representations[0].to(block_dtype)
@@ -1077,6 +1094,386 @@ def production_forward(inputs, pseudo_queries, layers, eps=None):
         eps,
         *flat_layer_params,
     )
+
+
+@triton_op(
+    "blockwise_attn::phase_2_online_softmax_merge_intrablock_backward",
+    mutates_args={},
+)
+def phase_2_online_softmax_merge_intrablock_backward_op(
+    intrablock_partial_sum: torch.Tensor,
+    pseudo_query: torch.Tensor,
+    phase1_interblock_normalized_output: torch.Tensor,
+    phase1_interblock_logsumexp: torch.Tensor,
+    grad_merged_attention_output: torch.Tensor,
+    eps: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    B_, T_, D_ = intrablock_partial_sum.shape
+    BT_ = B_ * T_
+
+    grad_intrablock_partial_sum = torch.zeros(
+        (B_, T_, D_),
+        device=intrablock_partial_sum.device,
+        dtype=torch.float32,
+    )
+
+    grad_pseudo_query = torch.zeros(
+        (D_,),
+        device=pseudo_query.device,
+        dtype=torch.float32,
+    )
+
+    grad_phase1_interblock_normalized_output = torch.empty(
+        (B_, T_, D_),
+        device=phase1_interblock_normalized_output.device,
+        dtype=torch.float32,
+    )
+
+    grad_phase1_interblock_logsumexp = torch.empty(
+        (B_, T_),
+        device=phase1_interblock_logsumexp.device,
+        dtype=torch.float32,
+    )
+
+    grad_pseudo_query_partial = torch.empty(
+        (B_, T_, D_),
+        device=pseudo_query.device,
+        dtype=torch.float32,
+    )
+
+    wrap_triton(phase_2_online_softmax_merge_intrablock_backward_kernel)[(BT_,)](
+        intrablock_partial_sum,
+        pseudo_query,
+        phase1_interblock_normalized_output,
+        phase1_interblock_logsumexp,
+        grad_merged_attention_output,
+        grad_intrablock_partial_sum,
+        grad_pseudo_query_partial,
+        grad_phase1_interblock_normalized_output,
+        grad_phase1_interblock_logsumexp,
+        eps,
+        D_,
+    )
+
+    wrap_triton(phase_2_reduce_grad_pseudo_query_kernel)[
+        lambda META: (
+            triton.cdiv(BT_, META["BLOCK_BATCH_SEQ"]),
+            triton.cdiv(D_, META["BLOCK_HIDDEN"]),
+        )
+    ](
+        grad_pseudo_query_partial,
+        grad_pseudo_query,
+        BT_,
+        D_,
+    )
+
+    return (
+        grad_intrablock_partial_sum,
+        grad_pseudo_query,
+        grad_phase1_interblock_normalized_output,
+        grad_phase1_interblock_logsumexp,
+    )
+
+
+def phase_2_setup_context(ctx, inputs, output):
+    (
+        intrablock_partial_sum,
+        pseudo_query,
+        interblock_normalized_output,
+        interblock_lse,
+        eps,
+    ) = inputs
+
+    ctx.save_for_backward(
+        intrablock_partial_sum,
+        pseudo_query,
+        interblock_normalized_output,
+        interblock_lse,
+    )
+    ctx.eps = eps
+
+
+def phase_2_backward(ctx, grad_merged_output):
+    if grad_merged_output is None:
+        return None, None, None, None, None
+
+    (
+        intrablock_partial_sum,
+        pseudo_query,
+        interblock_normalized_output,
+        interblock_lse,
+    ) = ctx.saved_tensors
+
+    (
+        grad_intrablock_partial_sum,
+        grad_pseudo_query,
+        grad_interblock_normalized_output,
+        grad_interblock_lse,
+    ) = phase_2_online_softmax_merge_intrablock_backward_op(
+        intrablock_partial_sum,
+        pseudo_query,
+        interblock_normalized_output,
+        interblock_lse,
+        grad_merged_output.contiguous(),
+        ctx.eps,
+    )
+
+    return (
+        (
+            grad_intrablock_partial_sum.to(intrablock_partial_sum.dtype)
+            if ctx.needs_input_grad[0]
+            else None
+        ),
+        grad_pseudo_query.to(pseudo_query.dtype) if ctx.needs_input_grad[1] else None,
+        (
+            grad_interblock_normalized_output.to(interblock_normalized_output.dtype)
+            if ctx.needs_input_grad[2]
+            else None
+        ),
+        (
+            grad_interblock_lse.to(interblock_lse.dtype)
+            if ctx.needs_input_grad[3]
+            else None
+        ),
+        None,
+    )
+
+
+phase_2_online_softmax_merge_intrablock.register_autograd(
+    phase_2_backward,
+    setup_context=phase_2_setup_context,
+)
+
+
+@triton_op(
+    "blockwise_attn::phase_1_batched_interblock_attention_backward",
+    mutates_args={},
+)
+def phase_1_batched_interblock_attention_backward_op(
+    block_representations: torch.Tensor,
+    pseudo_queries: torch.Tensor,
+    lses: torch.Tensor,
+    grad_softmax_outputs: torch.Tensor,
+    grad_lses: torch.Tensor,
+    has_grad_lses: bool,
+    eps: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    num_source_blocks = block_representations.shape[0]
+    num_queries = pseudo_queries.shape[0]
+    B_, T_, D_ = block_representations.shape[1:]
+    BT_ = B_ * T_
+
+    grad_block_representations = torch.zeros(
+        (num_source_blocks, B_, T_, D_),
+        device=block_representations.device,
+        dtype=torch.float32,
+    )
+
+    grad_pseudo_queries = torch.zeros(
+        (num_queries, D_),
+        device=pseudo_queries.device,
+        dtype=torch.float32,
+    )
+
+    grad_pseudo_queries_partial = torch.empty(
+        (num_queries, B_, T_, D_),
+        device=pseudo_queries.device,
+        dtype=torch.float32,
+    )
+
+    wrap_triton(phase_1_batched_interblock_attention_backward_kernel)[(BT_,)](
+        block_representations,
+        pseudo_queries,
+        lses,
+        grad_softmax_outputs,
+        grad_lses,
+        grad_block_representations,
+        grad_pseudo_queries_partial,
+        eps,
+        num_source_blocks,
+        BT_,
+        D_,
+        num_queries,
+        triton.next_power_of_2(num_source_blocks),
+        has_grad_lses,
+    )
+
+    wrap_triton(phase_1_reduce_grad_pseudo_queries_kernel)[
+        lambda META: (
+            triton.cdiv(BT_, META["BLOCK_BATCH_SEQ"]),
+            num_queries,
+            triton.cdiv(D_, META["BLOCK_HIDDEN"]),
+        )
+    ](
+        grad_pseudo_queries_partial,
+        grad_pseudo_queries,
+        BT_,
+        D_,
+        num_queries,
+    )
+
+    return grad_block_representations, grad_pseudo_queries
+
+
+def phase_1_setup_context(ctx, inputs, output):
+    block_representations, pseudo_queries, eps = inputs
+    _softmax_outputs, lses = output
+
+    ctx.save_for_backward(
+        block_representations,
+        pseudo_queries,
+        lses,
+    )
+    ctx.eps = eps
+
+
+def phase_1_backward(ctx, grad_softmax_outputs, grad_lses):
+    block_representations, pseudo_queries, lses = ctx.saved_tensors
+
+    num_queries = pseudo_queries.shape[0]
+    B_, T_, D_ = block_representations.shape[1:]
+
+    if grad_softmax_outputs is None:
+        grad_softmax_outputs = torch.zeros(
+            (num_queries, B_, T_, D_),
+            device=block_representations.device,
+            dtype=torch.float32,
+        )
+    else:
+        grad_softmax_outputs = grad_softmax_outputs.contiguous()
+
+    has_grad_lses = grad_lses is not None
+
+    if grad_lses is None:
+        # Not read by the kernel when has_grad_lses=False.
+        grad_lses = lses
+    else:
+        grad_lses = grad_lses.contiguous()
+
+    grad_block_representations, grad_pseudo_queries = (
+        phase_1_batched_interblock_attention_backward_op(
+            block_representations,
+            pseudo_queries,
+            lses,
+            grad_softmax_outputs,
+            grad_lses,
+            has_grad_lses,
+            ctx.eps,
+        )
+    )
+
+    return (
+        (
+            grad_block_representations.to(block_representations.dtype)
+            if ctx.needs_input_grad[0]
+            else None
+        ),
+        (
+            grad_pseudo_queries.to(pseudo_queries.dtype)
+            if ctx.needs_input_grad[1]
+            else None
+        ),
+        None,
+    )
+
+
+phase_1_batched_interblock_attention.register_autograd(
+    phase_1_backward,
+    setup_context=phase_1_setup_context,
+)
+
+
+def _blockwise_attention_block_forward(
+    block_start: int,
+    block_size: int,
+    layers,
+    pseudo_queries: torch.Tensor,
+    eps: float,
+    *prev_blocks: torch.Tensor,
+) -> torch.Tensor:
+    num_queries = min(block_size, len(layers) - block_start)
+
+    values = torch.stack(prev_blocks, dim=0)
+
+    phase1_out, phase1_lse = phase_1_batched_interblock_attention(
+        values,
+        pseudo_queries[block_start : block_start + num_queries],
+        eps,
+    )
+
+    curr_block = None
+
+    for query_offset in range(num_queries):
+        layer_idx = block_start + query_offset
+
+        if query_offset == 0:
+            layer_input = phase1_out[query_offset]
+            curr_block = layers[layer_idx](layer_input)
+        else:
+            layer_input = phase_2_online_softmax_merge_intrablock(
+                curr_block,
+                pseudo_queries[layer_idx],
+                phase1_out[query_offset],
+                phase1_lse[query_offset],
+                eps,
+            )
+            curr_block = curr_block + layers[layer_idx](layer_input)
+
+    return curr_block
+
+
+def production_forward2(
+    inputs: torch.Tensor,
+    pseudo_queries: torch.Tensor,
+    layers,
+    eps: float | None = None,
+    block_size: int = BLOCK_SIZE,
+    checkpoint_blocks: bool = True,
+) -> torch.Tensor:
+    if eps is None:
+        eps = EPS
+
+    blocks = [inputs]
+
+    for block_start in range(0, len(layers), block_size):
+
+        if checkpoint_blocks:
+
+            def run_block(pseudo_queries_arg, *prev_blocks, block_start=block_start):
+                return _blockwise_attention_block_forward(
+                    block_start,
+                    block_size,
+                    layers,
+                    pseudo_queries_arg,
+                    eps,
+                    *prev_blocks,
+                )
+
+            curr_block = checkpoint(
+                run_block,
+                pseudo_queries,
+                *blocks,
+                use_reentrant=False,
+            )
+        else:
+            curr_block = _blockwise_attention_block_forward(
+                block_start,
+                block_size,
+                layers,
+                pseudo_queries,
+                eps,
+                *blocks,
+            )
+
+        blocks.append(curr_block)
+
+    final_out, _final_lse = phase_1_batched_interblock_attention(
+        torch.stack(blocks, dim=0),
+        pseudo_queries[-1:],
+        eps,
+    )
+
+    return final_out[0].to(inputs.dtype)
 
 
 # TODO: do max-autotune
@@ -1440,7 +1837,7 @@ for i in range(5):
     args_identity_randn = (inputs, pseudo_queries_randn, layers_identity)
 
     funcs_to_bench = [
-        ("torch_compile_phases_forward", torch_compile_phases_forward),
+        # ("torch_compile_phases_forward", torch_compile_phases_forward),
         ("production_forward", production_forward),
         ("production_forward2", production_forward2),
         ("paper_forward", paper_forward),
@@ -1460,14 +1857,14 @@ for i in range(5):
         *args_swiglu_randn,
         grad_out,
     )
-    compare_grads(
-        "paper_forward",
-        paper_forward,
-        "torch_compile_phases_forward",
-        torch_compile_phases_forward,
-        *args_swiglu_randn,
-        grad_out,
-    )
+    # compare_grads(
+    #     "paper_forward",
+    #     paper_forward,
+    #     "torch_compile_phases_forward",
+    #     torch_compile_phases_forward,
+    #     *args_swiglu_randn,
+    #     grad_out,
+    # )
     compare_grads(
         "paper_forward",
         paper_forward,
