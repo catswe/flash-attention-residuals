@@ -6,6 +6,8 @@
 
 *Benchmarked on H100. Dependent on problem size and setup.
 
+Reference: https://arxiv.org/abs/2603.15031 (Kimi Team, MoonshotAI, 2026)
+
 ## Credits:
 Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for advising on and supporting the development of this kernel.
 
