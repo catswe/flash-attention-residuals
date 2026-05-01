@@ -1,6 +1,6 @@
 ## Flash Attention Residuals
 
-> **1.4x faster inference/training** vs. torch.compile impl. of the paper’s two-phase batched attention with online softmax
+> **1.4x faster inference/training** vs. torch.compile impl. of the paper’s two-phase batched attention + online softmax
 
 > **20% reduction in training memory** (without activation checkpointing)*
 
