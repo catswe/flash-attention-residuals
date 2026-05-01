@@ -1,10 +1,10 @@
 import triton
 import triton.language as tl
-from .configs import forward_attn_configs, backward_attn_configs
+from .configs import forward_configs, phase1_backward_configs
 
 
 @triton.autotune(
-    configs=forward_attn_configs,
+    configs=forward_configs,
     key=["NUM_SOURCE_BLOCKS", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK", "PADDED_SRC"],
 )
 @triton.jit
@@ -78,7 +78,7 @@ def phase_1_batched_attention_forward_kernel(
 
 
 @triton.autotune(
-    configs=backward_attn_configs,
+    configs=phase1_backward_configs,
     key=["NUM_SOURCE_BLOCKS", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK", "PADDED_SRC"],
     restore_value=[
         "grad_block_representations_accumulator_ptr",

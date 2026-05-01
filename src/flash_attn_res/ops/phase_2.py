@@ -3,12 +3,9 @@ import triton
 from torch.library import triton_op, wrap_triton
 
 from ..kernels import phase_2
-from ..kernels.reduce import reduce_grad_queries_kernel
 
 
-@triton_op(
-    "flash_attn_res::phase_2_online_softmax_merge_forward", mutates_args={}
-)
+@triton_op("flash_attn_res::phase_2_online_softmax_merge_forward", mutates_args={})
 def phase_2_online_softmax_merge_triton_op(
     intrablock_partial_sum: torch.Tensor,
     pseudo_query: torch.Tensor,
@@ -76,12 +73,6 @@ def _online_softmax_merge_backward_triton_op(
         dtype=torch.float32,
     )
 
-    grad_pseudo_query_partial = torch.empty(
-        (B, T, D),
-        device=pseudo_query.device,
-        dtype=torch.float32,
-    )
-
     _online_softmax_merge_backward_accumulate(
         intrablock_partial_sum,
         pseudo_query,
@@ -92,8 +83,7 @@ def _online_softmax_merge_backward_triton_op(
         grad_pseudo_query,
         grad_phase1_interblock_normalized_output,
         grad_phase1_interblock_logsumexp,
-        grad_pseudo_query_partial,
-        eps,
+        eps=eps,
     )
 
     return (
@@ -114,35 +104,24 @@ def _online_softmax_merge_backward_accumulate(
     grad_pseudo_query: torch.Tensor,
     grad_phase1_interblock_normalized_output: torch.Tensor,
     grad_phase1_interblock_logsumexp: torch.Tensor,
-    grad_pseudo_query_partial: torch.Tensor,
     eps: float,
 ) -> None:
     B, T, D = intrablock_partial_sum.shape
     BT = B * T
 
-    wrap_triton(phase_2.phase_2_online_softmax_merge_backward_kernel)[(BT,)](
+    wrap_triton(phase_2.phase_2_online_softmax_merge_backward_kernel)[
+        lambda META: (triton.cdiv(BT, META["BLOCK_BT"]),)
+    ](
         intrablock_partial_sum,
         pseudo_query,
         phase1_interblock_normalized_output,
         phase1_interblock_logsumexp,
         grad_merged_attention_output,
         grad_intrablock_partial_sum,
-        grad_pseudo_query_partial,
+        grad_pseudo_query,
         grad_phase1_interblock_normalized_output,
         grad_phase1_interblock_logsumexp,
         eps,
-        D,
-    )
-
-    wrap_triton(reduce_grad_queries_kernel)[
-        lambda META: (
-            triton.cdiv(BT, META["BLOCK_BATCH_SEQ"]),
-            1,
-            triton.cdiv(D, META["BLOCK_HIDDEN"]),
-        )
-    ](
-        grad_pseudo_query_partial,
-        grad_pseudo_query,
         BT,
         D,
     )

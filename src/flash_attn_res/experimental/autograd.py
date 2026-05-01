@@ -295,7 +295,6 @@ class BlockAttentionResiduals(torch.autograd.Function):
                         grad_pseudo_queries[layer_idx],
                         grad_phase1_out[query_offset],
                         grad_phase1_lse[query_offset],
-                        grad_layer_input,
                         eps=eps,
                     )
 
