@@ -62,7 +62,7 @@ class BlockAttentionResiduals(torch.autograd.Function):
 
             del (block_attn_out,)
 
-        final_out, _final_lse = phase_1.phase_1_batched_attention_triton_op(
+        final_out, final_lse = phase_1.phase_1_batched_attention_triton_op(
             block_representations,
             pseudo_queries[-1:],
             eps,
@@ -71,6 +71,7 @@ class BlockAttentionResiduals(torch.autograd.Function):
         ctx.save_for_backward(
             block_representations,
             pseudo_queries,
+            final_lse,
         )
         ctx.layers = layers
         ctx.eps = eps
@@ -85,7 +86,7 @@ class BlockAttentionResiduals(torch.autograd.Function):
         if grad_output is None:
             return (None, None, None, None, None, *([None] * ctx.num_layer_params))
 
-        block_representations, pseudo_queries = ctx.saved_tensors
+        block_representations, pseudo_queries, final_lse = ctx.saved_tensors
         layers = ctx.layers
         eps = ctx.eps
 
@@ -147,17 +148,6 @@ class BlockAttentionResiduals(torch.autograd.Function):
                     )
 
             return grad_layer_input
-
-        with torch.no_grad():
-            _final_out_recomputed, final_lse = (
-                phase_1.phase_1_batched_attention_triton_op(
-                    block_representations,
-                    pseudo_queries[-1:],
-                    eps,
-                )
-            )
-
-            del _final_out_recomputed
 
         grad_pseudo_queries_partial_final = torch.empty(
             1,
