@@ -791,10 +791,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     curr_block.copy_(update)
                 else:
                     curr_block.add_(update)
-                    
+
                 del layer_input, update
 
-            del block_attn_out, 
+            del (block_attn_out,)
 
         final_out, _final_lse = phase_1_batched_interblock_attention(
             block_representations,
@@ -946,15 +946,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     eps,
                 )
 
-            intrablock_partial_before_scratch = torch.empty(
-                max(num_queries - 1, 1),
-                B,
-                T,
-                D,
-                device=device,
-                dtype=block_dtype,
-            )
-
             partial_recompute = torch.empty(
                 B,
                 T,
@@ -969,13 +960,10 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 if query_offset == 0:
                     layer_input_recomputed = phase1_out[query_offset]
                 else:
-                    partial_before = intrablock_partial_before_scratch[query_offset - 1]
-                    partial_before.copy_(partial_recompute)
-
                     with torch.no_grad():
                         layer_input_recomputed = (
                             phase_2_online_softmax_merge_intrablock(
-                                partial_before,
+                                partial_recompute,
                                 pseudo_queries[layer_idx],
                                 phase1_out[query_offset],
                                 phase1_lse[query_offset],
@@ -998,8 +986,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                     else:
                         partial_recompute.add_(update.detach())
 
-            del partial_recompute
-
             grad_curr_partial = grad_block_representations[curr_block_idx]
 
             for query_offset in range(num_queries - 1, -1, -1):
@@ -1021,8 +1007,11 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
                 if query_offset == 0:
                     grad_phase1_out[query_offset].copy_(grad_layer_input)
                 else:
+                    with torch.no_grad():
+                        partial_recompute.sub_(layer_update.detach())
+
                     phase_2_online_softmax_merge_intrablock_backward(
-                        intrablock_partial_before_scratch[query_offset - 1],
+                        partial_recompute,
                         pseudo_queries[layer_idx],
                         phase1_out[query_offset],
                         phase1_lse[query_offset],
@@ -1042,7 +1031,6 @@ class BlockwiseAttentionFunction(torch.autograd.Function):
             del layer_input_recomputed_list
             del layer_update_list
             del phase1_out
-            del intrablock_partial_before_scratch
 
             phase_1_batched_interblock_attention_backward(
                 block_representations[:curr_block_idx],
