@@ -1,0 +1,197 @@
+import triton
+import triton.language as tl
+from .configs import forward_attn_configs, backward_attn_configs
+
+
+@triton.autotune(
+    configs=forward_attn_configs,
+    key=["NUM_SOURCE_BLOCKS", "HIDDEN_DIM", "NUM_QUERIES_PER_BLOCK", "PADDED_SRC"],
+)
+@triton.jit
+def phase_2_online_softmax_merge_forward_kernel(
+    intrablock_partial_sum_ptr,
+    pseudo_query_ptr,
+    interblock_normalized_output_ptr,
+    interblock_lse_ptr,
+    merged_output_ptr,
+    eps,
+    HIDDEN_DIM: tl.constexpr,
+):
+    batch_seq_idx = tl.program_id(0)
+    hidden_dim_range = tl.arange(0, HIDDEN_DIM)
+
+    intrablock_partial_sum = tl.load(
+        intrablock_partial_sum_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+    pseudo_query_vector = tl.load(
+        pseudo_query_ptr + hidden_dim_range, eviction_policy="evict_last"
+    ).to(tl.float32)
+
+    interblock_lse = tl.load(interblock_lse_ptr + batch_seq_idx)
+    interblock_normalized_output = tl.load(
+        interblock_normalized_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+
+    squared_norm_sum = tl.sum(intrablock_partial_sum * intrablock_partial_sum)
+    inverse_rms_norm = tl.rsqrt(squared_norm_sum / float(HIDDEN_DIM) + eps)
+
+    intrablock_logit = (
+        tl.sum(intrablock_partial_sum * pseudo_query_vector) * inverse_rms_norm
+    )
+    merged_max = tl.maximum(interblock_lse, intrablock_logit)
+    interblock_weight = tl.exp(interblock_lse - merged_max)
+    intrablock_weight = tl.exp(intrablock_logit - merged_max)
+    exp_sum = interblock_weight + intrablock_weight
+    merged_output = (
+        interblock_weight * interblock_normalized_output
+        + intrablock_weight * intrablock_partial_sum
+    ) / exp_sum
+
+    tl.store(
+        merged_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
+        merged_output.to(tl.bfloat16),
+    )
+
+
+@triton.autotune(
+    configs=backward_attn_configs,
+    key=["HIDDEN_DIM"],
+    restore_value=[
+        "grad_intrablock_partial_sum_accumulator_ptr",
+        "grad_pseudo_query_partial_ptr",
+    ],
+)
+@triton.jit
+def phase_2_online_softmax_merge_backward_kernel(
+    intrablock_partial_sum_ptr,
+    pseudo_query_ptr,
+    phase1_interblock_normalized_output_ptr,
+    phase1_interblock_logsumexp_ptr,
+    grad_merged_attention_output_ptr,
+    grad_intrablock_partial_sum_accumulator_ptr,
+    grad_pseudo_query_partial_ptr,
+    grad_phase1_interblock_normalized_output_ptr,
+    grad_phase1_interblock_logsumexp_ptr,
+    eps,
+    HIDDEN_DIM: tl.constexpr,
+):
+    batch_seq_idx = tl.program_id(0)
+    hidden_dim_range = tl.arange(0, HIDDEN_DIM)
+
+    intrablock_partial_sum = tl.load(
+        intrablock_partial_sum_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+
+    pseudo_query = tl.load(
+        pseudo_query_ptr + hidden_dim_range,
+        eviction_policy="evict_last",
+    ).to(tl.float32)
+
+    phase1_interblock_normalized_output = tl.load(
+        phase1_interblock_normalized_output_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range
+    ).to(tl.float32)
+
+    phase1_interblock_logsumexp = tl.load(
+        phase1_interblock_logsumexp_ptr + batch_seq_idx
+    ).to(tl.float32)
+
+    grad_merged_attention_output = tl.load(
+        grad_merged_attention_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range
+    ).to(tl.float32)
+
+    intrablock_partial_sum_squared_norm = tl.sum(
+        intrablock_partial_sum * intrablock_partial_sum
+    )
+    intrablock_inverse_rms_norm = tl.rsqrt(
+        intrablock_partial_sum_squared_norm / float(HIDDEN_DIM) + eps
+    )
+
+    pseudo_query_intrablock_dot = tl.sum(intrablock_partial_sum * pseudo_query)
+    phase2_intrablock_logit = pseudo_query_intrablock_dot * intrablock_inverse_rms_norm
+
+    online_softmax_shift = tl.maximum(
+        phase1_interblock_logsumexp,
+        phase2_intrablock_logit,
+    )
+    phase1_partition_weight = tl.exp(phase1_interblock_logsumexp - online_softmax_shift)
+    phase2_partition_weight = tl.exp(phase2_intrablock_logit - online_softmax_shift)
+    merged_partition_weight_sum = phase1_partition_weight + phase2_partition_weight
+
+    phase1_merge_probability = phase1_partition_weight / merged_partition_weight_sum
+    phase2_merge_probability = phase2_partition_weight / merged_partition_weight_sum
+
+    grad_phase1_interblock_normalized_output = (
+        phase1_merge_probability * grad_merged_attention_output
+    )
+    grad_intrablock_partial_sum_from_value_path = (
+        phase2_merge_probability * grad_merged_attention_output
+    )
+
+    grad_output_dot_interblock_minus_intrablock = tl.sum(
+        grad_merged_attention_output
+        * (phase1_interblock_normalized_output - intrablock_partial_sum)
+    )
+
+    merge_probability_product = phase1_merge_probability * phase2_merge_probability
+
+    grad_phase1_interblock_logsumexp = (
+        merge_probability_product * grad_output_dot_interblock_minus_intrablock
+    )
+
+    grad_phase2_intrablock_logit = (
+        -merge_probability_product * grad_output_dot_interblock_minus_intrablock
+    )
+
+    intrablock_inverse_rms_norm_cubed = (
+        intrablock_inverse_rms_norm
+        * intrablock_inverse_rms_norm
+        * intrablock_inverse_rms_norm
+    )
+
+    grad_intrablock_partial_sum_from_logit_path = grad_phase2_intrablock_logit * (
+        intrablock_inverse_rms_norm * pseudo_query
+        - pseudo_query_intrablock_dot
+        * intrablock_inverse_rms_norm_cubed
+        * intrablock_partial_sum
+        / float(HIDDEN_DIM)
+    )
+
+    grad_pseudo_query = (
+        grad_phase2_intrablock_logit
+        * intrablock_inverse_rms_norm
+        * intrablock_partial_sum
+    )
+    grad_intrablock_partial_sum = (
+        grad_intrablock_partial_sum_from_value_path
+        + grad_intrablock_partial_sum_from_logit_path
+    )
+
+    grad_intrablock_ptr = (
+        grad_intrablock_partial_sum_accumulator_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range
+    )
+
+    tl.store(
+        grad_intrablock_ptr,
+        tl.load(grad_intrablock_ptr).to(tl.float32) + grad_intrablock_partial_sum,
+    )
+
+    tl.store(
+        grad_pseudo_query_partial_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
+        grad_pseudo_query,
+    )
+
+    tl.store(
+        grad_phase1_interblock_normalized_output_ptr
+        + batch_seq_idx * HIDDEN_DIM
+        + hidden_dim_range,
+        grad_phase1_interblock_normalized_output,
+    )
+
+    tl.store(
+        grad_phase1_interblock_logsumexp_ptr + batch_seq_idx,
+        grad_phase1_interblock_logsumexp,
+    )
