@@ -41,14 +41,11 @@ def phase_2_online_softmax_merge_forward_kernel(
     intrablock_logit = (
         tl.sum(intrablock_partial_sum * pseudo_query_vector) * inverse_rms_norm
     )
-    merged_max = tl.maximum(interblock_lse, intrablock_logit)
-    interblock_weight = tl.exp(interblock_lse - merged_max)
-    intrablock_weight = tl.exp(intrablock_logit - merged_max)
-    exp_sum = interblock_weight + intrablock_weight
-    merged_output = (
-        interblock_weight * interblock_normalized_output
-        + intrablock_weight * intrablock_partial_sum
-    ) / exp_sum
+    intrablock_prob = tl.sigmoid(intrablock_logit - interblock_lse)
+
+    merged_output = interblock_normalized_output + intrablock_prob * (
+        intrablock_partial_sum - interblock_normalized_output
+    )
 
     tl.store(
         merged_output_ptr + batch_seq_idx * HIDDEN_DIM + hidden_dim_range,
@@ -135,18 +132,10 @@ def phase_2_online_softmax_merge_backward_kernel(
 
     phase2_intrablock_logit = pseudo_query_intrablock_dot * intrablock_inverse_rms_norm
 
-    online_softmax_shift = tl.maximum(
-        phase1_interblock_logsumexp,
-        phase2_intrablock_logit,
+    phase2_merge_probability = tl.sigmoid(
+        phase2_intrablock_logit - phase1_interblock_logsumexp
     )
-
-    phase1_partition_weight = tl.exp(phase1_interblock_logsumexp - online_softmax_shift)
-    phase2_partition_weight = tl.exp(phase2_intrablock_logit - online_softmax_shift)
-
-    merged_partition_weight_sum = phase1_partition_weight + phase2_partition_weight
-
-    phase1_merge_probability = phase1_partition_weight / merged_partition_weight_sum
-    phase2_merge_probability = phase2_partition_weight / merged_partition_weight_sum
+    phase1_merge_probability = 1.0 - phase2_merge_probability
 
     grad_phase1_interblock_normalized_output = (
         phase1_merge_probability[:, None] * grad_merged_attention_output

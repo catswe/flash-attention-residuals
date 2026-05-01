@@ -60,7 +60,7 @@ class BlockAttentionResiduals(torch.autograd.Function):
 
                 del layer_input, update
 
-            del (block_attn_out,)
+            del block_attn_out, block_lse
 
         final_out, final_lse = phase_1.phase_1_batched_attention_triton_op(
             block_representations,
