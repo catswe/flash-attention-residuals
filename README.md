@@ -9,6 +9,14 @@
 ## Credits:
 Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for advising on and supporting the development of this kernel.
 
+## Install
+
+```
+pip install flash-attn-res
+```
+
+
+
 <!-- TODO: -->
 <!-- - Figure out first block phase 1 special case redundant computation output -->
 <!-- - Determine redundant store -->
@@ -23,7 +31,7 @@ Thanks to Mohamed Osman (https://github.com/spaghettiSystems) and Cartesia for a
 - Stochastic rounding
 - Make into Python package
 
-## Insights:
+## Development Notes:
 - Normalizing in phase 1 keeps outputs bounded (convex combination of values) so bf16 error doesn't scale with softmax flatness. Phase 2 computes in fp32, and the reduction algebra matches split-KV Flash Attention.
 - Certain dimensions, especially NUM_QUERIES_PER_BLOCK, are small so semi-elementwise (B, T) kernel with static_range is better than doing tl.dot
 - Kernel is memory bound and doing semi-elementwise allows for kernel fusion
