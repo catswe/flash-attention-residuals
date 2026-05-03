@@ -668,3 +668,133 @@ for i in range(2):
         *args_swiglu_randn,
         grad_out,
     )
+
+
+SUBLAYER_BLOCK_SIZE = 2 * BLOCK_SIZE
+
+
+class AttnSublayer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.norm = nn.RMSNorm(D, device=DEVICE, dtype=DTYPE, eps=EPS)
+        self.linear = nn.Linear(D, D, bias=False, device=DEVICE, dtype=DTYPE)
+
+    def forward(self, x):
+        return self.linear(self.norm(x))
+
+
+def liger_torch_forward_sublayer(inputs, pseudo_queries, sublayers):
+    blocks = [inputs]
+    w_norm = LIGER_W_NORM.to(device=pseudo_queries.device, dtype=pseudo_queries.dtype)
+
+    for i in range(len(sublayers)):
+        layer = sublayers[i]
+
+        def step(blocks_t, q, layer=layer):
+            outputs = pytorch_attn_res(blocks_t, q, w_norm, eps=EPS)
+            return layer(outputs.to(inputs.dtype))
+
+        update = maybe_ckpt(step, torch.stack(blocks, dim=0), pseudo_queries[i])
+
+        if i % SUBLAYER_BLOCK_SIZE == 0:
+            blocks.append(update)
+        else:
+            blocks[-1] = blocks[-1] + update
+
+    def final_step(blocks_t, q):
+        return pytorch_attn_res(blocks_t, q, w_norm, eps=EPS)
+
+    return maybe_ckpt(
+        final_step,
+        torch.stack(blocks, dim=0),
+        pseudo_queries[-1],
+    ).to(inputs.dtype)
+
+
+def production_forward_sublayer(inputs, pseudo_queries, sublayers, eps=None):
+    if eps is None:
+        eps = EPS
+
+    flat_layer_params = tuple(p for layer in sublayers for p in layer.parameters())
+
+    return BlockAttentionResiduals.apply(
+        inputs,
+        pseudo_queries,
+        sublayers,
+        SUBLAYER_BLOCK_SIZE,
+        eps,
+        *flat_layer_params,
+    )
+
+
+L_SUBLAYER = 2 * L
+
+print("\n" + "=" * 60)
+print(
+    f"PER-SUBLAYER ROUTING (Paper Figure 2): "
+    f"{L} transformer layers, {L_SUBLAYER} sublayers, "
+    f"block_size={SUBLAYER_BLOCK_SIZE}"
+)
+print("=" * 60)
+
+for i in range(2):
+    inputs_sl = torch.randn(
+        B, T, D, device=DEVICE, dtype=DTYPE, requires_grad=True,
+    )
+
+    attn_layers = [AttnSublayer() for _ in range(L)]
+    mlp_layers = [SwiGLU() for _ in range(L)]
+
+    sublayers_interleaved = []
+    for a, m in zip(attn_layers, mlp_layers):
+        sublayers_interleaved.append(a)
+        sublayers_interleaved.append(m)
+
+    pseudo_queries_sl = torch.randn(
+        L_SUBLAYER + 1, D, device=DEVICE, dtype=DTYPE, requires_grad=True,
+    ) / math.sqrt(D)
+
+    grad_out_sl = torch.randn(B, T, D, device=DEVICE, dtype=DTYPE)
+
+    args_sl = (inputs_sl, pseudo_queries_sl, sublayers_interleaved)
+
+    print(f"\nIteration {i}")
+
+    compare_grads(
+        "liger_torch_sublayer",
+        liger_torch_forward_sublayer,
+        "production_sublayer",
+        production_forward_sublayer,
+        *args_sl,
+        grad_out_sl,
+    )
+
+    fwd_bwd = bench_fwd_bwd(
+        production_forward_sublayer, *args_sl, grad_out_sl,
+    )
+    fwd = bench_forward_inference(
+        production_forward_sublayer, *args_sl,
+    )
+    bwd = bench_backward_only(
+        production_forward_sublayer, *args_sl, grad_out_sl,
+    )
+    mem = bench_memory(
+        production_forward_sublayer, *args_sl, grad_out_sl,
+    )
+
+    print(f"production_sublayer fwd+bwd:  {fwd_bwd:.3f} ms")
+    print(f"production_sublayer fwd-only: {fwd:.3f} ms")
+    print(f"production_sublayer bwd-only: {bwd:.3f} ms")
+    print(
+        f"production_sublayer peak allocated: "
+        f"fwd={mem['fwd_alloc_gib']:.3f} GiB, "
+        f"fwd+bwd={mem['fwd_bwd_alloc_gib']:.3f} GiB"
+    )
+
+    del inputs_sl, pseudo_queries_sl, grad_out_sl
+    del attn_layers, mlp_layers, sublayers_interleaved
+    torch.cuda.synchronize()
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
+    torch.cuda.reset_peak_memory_stats()
