@@ -17,8 +17,27 @@ pip install flash-attn-res
 
 ## Usage
 This package contains Triton kernels, `triton_op` wrappers compatible with torch.compile, and an experimental high-performance Block AttenRes autograd implementation.
-See `src` and `benchmarks` folders.
 
+```python
+from flash_attn_res.ops.phase_1 import phase_1_batched_attention_triton_op
+from flash_attn_res.ops.phase_2 import phase_2_online_softmax_merge_triton_op
+
+phase1_out, phase1_lse = phase_1_batched_attention_triton_op(
+    values,
+    pseudo_queries,
+    eps,
+)
+
+merged = phase_2_online_softmax_merge_triton_op(
+    curr_block,
+    pseudo_query,
+    phase1_out_i,
+    phase1_lse_i,
+    eps,
+)
+```
+
+For peak performance, import `BlockAttentionResiduals` from `experimental` folder. For more detail on usage, see `src` and `benchmarks` folders.
 
 <!-- TODO: -->
 <!-- - Figure out first block phase 1 special case redundant computation output -->
