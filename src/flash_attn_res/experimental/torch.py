@@ -85,7 +85,7 @@ def naive_attention_residual(pseudo_query, values):
     ).to(DTYPE)
 
 
-def paper_forward(inputs, pseudo_queries, layers):
+def paper_forward(inputs, pseudo_queries, layers, block_size=BLOCK_SIZE):
     inputs = inputs.to(torch.float32)
     pseudo_queries = pseudo_queries.to(torch.float32)
 
@@ -98,7 +98,7 @@ def paper_forward(inputs, pseudo_queries, layers):
         )
         update = layers[i](outputs)
 
-        if i % BLOCK_SIZE == 0:
+        if i % block_size == 0:
             blocks.append(update)
         else:
             blocks[-1] = blocks[-1] + update
@@ -107,6 +107,18 @@ def paper_forward(inputs, pseudo_queries, layers):
         pseudo_queries[-1],
         torch.stack(blocks, dim=0),
     )
+
+
+def paper_forward_sublayer(
+    inputs, pseudo_queries, attn_sublayers, mlp_sublayers, block_size=BLOCK_SIZE,
+):
+    sublayers = []
+    for attn_fn, mlp_fn in zip(attn_sublayers, mlp_sublayers):
+        sublayers.append(attn_fn)
+        sublayers.append(mlp_fn)
+
+    sublayer_block_size = 2 * block_size
+    return paper_forward(inputs, pseudo_queries, sublayers, sublayer_block_size)
 
 
 @torch.compile(mode="max-autotune-no-cudagraphs")
@@ -161,12 +173,12 @@ def phase_2_fn(current_block_values, query_vector, prev_lse, prev_normalized):
     return out.to(torch.bfloat16)
 
 
-def torch_compile_phases_forward(inputs, query_w, layers):
+def torch_compile_phases_forward(inputs, query_w, layers, block_size=BLOCK_SIZE):
     blocks = [inputs]
     input_dtype = inputs.dtype
 
-    for block_start in range(0, len(layers), BLOCK_SIZE):
-        num_queries = min(BLOCK_SIZE, len(layers) - block_start)
+    for block_start in range(0, len(layers), block_size):
+        num_queries = min(block_size, len(layers) - block_start)
         query_block = query_w[block_start : block_start + num_queries]
         values = torch.stack(blocks, dim=0)
 
@@ -189,3 +201,23 @@ def torch_compile_phases_forward(inputs, query_w, layers):
 
     _, _, h = phase_1_fn(query_w[-1:], torch.stack(blocks, dim=0))
     return h.to(input_dtype)
+
+
+def interleave_sublayers(attn_sublayers, mlp_sublayers):
+    sublayers = []
+    for attn_fn, mlp_fn in zip(attn_sublayers, mlp_sublayers):
+        sublayers.append(attn_fn)
+        sublayers.append(mlp_fn)
+    return sublayers
+
+
+def production_forward_sublayer(
+    inputs, pseudo_queries, attn_sublayers, mlp_sublayers,
+    eps=None, block_size=BLOCK_SIZE, **kwargs,
+):
+    sublayers = interleave_sublayers(attn_sublayers, mlp_sublayers)
+    sublayer_block_size = 2 * block_size
+    return production_forward2(
+        inputs, pseudo_queries, sublayers,
+        eps=eps, block_size=sublayer_block_size, **kwargs,
+    )
