@@ -109,6 +109,7 @@ For more detail on usage, see `src` folders. For peak performance (not recommend
 - Better autotuning set up
 - Better tests
 - Better mixed precision setup
+- Depth-wise RoPE
 - Precision tuning
 - Mixed FP16 and BF16 and store quantization scale
 - Stochastic rounding
